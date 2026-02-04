@@ -11,11 +11,12 @@ from utils.config_loader import load_config
 
 config = load_config()
 
+REPO_ROOT = config["REPO_ROOT"]
 BASE_URL = config["BASE_URL"]
 INDEX_URL = config["INDEX_URL"]
-OUTPUT_DIR = config["OUTPUT_DIR"]
 HEADERS = config["HEADERS"]
-REPO_ROOT = config["REPO_ROOT"]
+
+OUTPUT_DIR = f"{REPO_ROOT}/{config['OUTPUT_DIR']}"
 
 
 def clean(text):
