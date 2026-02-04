@@ -1,7 +1,8 @@
 {
+  "REPO_ROOT": "",
   "BASE_URL": "https://devgan.in",
   "INDEX_URL": "https://devgan.in/all_sections_ipc.php",
-  "OUTPUT_DIR": "ipc_sections_json",
+  "OUTPUT_DIR": "ipc_sections",
   "HEADERS": {
     "User-Agent": "Mozilla/5.0"
   }
