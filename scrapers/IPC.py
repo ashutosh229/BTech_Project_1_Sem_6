@@ -105,3 +105,14 @@ def scrape_section(url):
             data["compoundable"] = clean(h2.get_text())
 
     return data
+
+
+def save_json(data):
+    if not data["section"]:
+        return
+
+    filename = f"{data['section']}_IPC.json"
+    path = os.path.join(OUTPUT_DIR, filename)
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
