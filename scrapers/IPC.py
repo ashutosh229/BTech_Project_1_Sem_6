@@ -5,10 +5,14 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-with open("config.json", "r") as f:
-    config = json.load(f)
+from utils.config_loader import load_config
+
+config = load_config()
 
 BASE_URL = config["BASE_URL"]
 INDEX_URL = config["INDEX_URL"]
 OUTPUT_DIR = config["OUTPUT_DIR"]
 HEADERS = config["HEADERS"]
+REPO_ROOT = config["REPO_ROOT"]
+
+print(f"Repository Root: {REPO_ROOT}")
