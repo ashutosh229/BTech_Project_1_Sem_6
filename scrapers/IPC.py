@@ -117,3 +117,20 @@ def save_json(data):
 
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def main():
+    links = get_section_links()
+    print(f"Found {len(links)} sections")
+
+    for i, link in enumerate(links, 1):
+        try:
+            print(f"[{i}] {link}")
+            data = scrape_section(link)
+            save_json(data)
+        except Exception as e:
+            print(f"❌ Failed: {link} | {e}")
+
+
+if __name__ == "__main__":
+    main()
