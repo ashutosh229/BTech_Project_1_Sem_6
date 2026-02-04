@@ -84,12 +84,8 @@ def scrape_section(url: str) -> dict:
     }
 
     search_div = soup.find("div", class_="search")
-    if not search_div:
-        return data
 
     main_table = search_div.find("table")
-    if not main_table:
-        return data
 
     section_th = main_table.select_one("th.sec")
     if section_th:
@@ -150,7 +146,7 @@ def scrape_section(url: str) -> dict:
                 if h2:
                     data["compoundable"] = clean(h2.get_text())
 
-    return data
+        return data
 
 
 # -------------------- STORAGE --------------------
@@ -184,21 +180,25 @@ def process_section(link: str, index: int):
 
 
 def main():
-    links = get_section_links()
-    print(f"Found {len(links)} IPC sections")
+    # links = get_section_links()
+    link = "https://devgan.in/ipc/section/420/"
+    # print(link)
+    # print(f"Found {len(links)} IPC sections")
+    data = scrape_section(link)
+    print("Sample data:", data)
 
-    MAX_WORKERS = 10  # safe + fast
+    # MAX_WORKERS = 10  # safe + fast
 
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [
-            executor.submit(process_section, link, i) for i, link in enumerate(links, 1)
-        ]
+    # with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    #     futures = [
+    #         executor.submit(process_section, link, i) for i, link in enumerate(links, 1)
+    #     ]
 
-        for future in as_completed(futures):
-            try:
-                print(future.result())
-            except Exception as e:
-                print(f"❌ Error: {e}")
+    #     for future in as_completed(futures):
+    #         try:
+    #             print(future.result())
+    #         except Exception as e:
+    #             print(f"❌ Error: {e}")
 
 
 if __name__ == "__main__":
