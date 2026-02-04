@@ -15,4 +15,6 @@ OUTPUT_DIR = config["OUTPUT_DIR"]
 HEADERS = config["HEADERS"]
 REPO_ROOT = config["REPO_ROOT"]
 
-print(f"Repository Root: {REPO_ROOT}")
+
+def clean(text):
+    return " ".join(text.strip().split()) if text else ""
