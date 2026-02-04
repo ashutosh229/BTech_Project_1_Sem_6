@@ -3,14 +3,16 @@
 # Check if commit message is provided
 if [ -z "$1" ]; then
   echo "❌ Error: Commit message required"
-  echo "Usage: ./gitpush.sh \"your commit message\""
+  echo "Usage:"
+  echo "  ./gitpush.sh \"commit message\" [path]"
   exit 1
 fi
 
 COMMIT_MESSAGE="$1"
+TARGET_PATH="${2:-.}"   # if $2 empty → "."
 
-echo "📦 Adding all files..."
-git add .
+echo "📦 Adding files from: $TARGET_PATH"
+git add "$TARGET_PATH"
 
 echo "📝 Committing changes..."
 git commit -m "$COMMIT_MESSAGE"
