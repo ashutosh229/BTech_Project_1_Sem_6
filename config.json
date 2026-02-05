@@ -2,7 +2,9 @@
   "REPO_ROOT": "",
   "BASE_URL": "https://devgan.in",
   "INDEX_URL": "https://devgan.in/all_sections_ipc.php",
+  "INDEX_URL_BNS": "https://devgan.in/all_sections_bns.php",
   "OUTPUT_DIR": "data/ipc_sections",
+  "OUTPUT_DIR_BNS": "data/bns_sections",
   "HEADERS": {
     "User-Agent": "Mozilla/5.0"
   }
