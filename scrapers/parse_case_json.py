@@ -26,8 +26,18 @@ def parse_real_case_json(file_path):
         
         # Add to our clean case object
         clean_case[clean_key] = section_text
-        
+        # --- FALLBACK LOGIC FOR RAG ---
+    # We MUST have a 'primary_facts' string for our embeddings later.
+    if "fact" in clean_case and clean_case["fact"].strip():
+        clean_case["primary_facts"] = clean_case["fact"]
+    elif "analysis_of_the_law" in clean_case and clean_case["analysis_of_the_law"].strip():
+        clean_case["primary_facts"] = clean_case["analysis_of_the_law"]
+    else:
+        # If all else fails, grab the first 1000 characters of whatever text exists
+        all_text = " ".join([v for k, v in clean_case.items() if isinstance(v, str)])
+        clean_case["primary_facts"] = all_text[:1000]
     return clean_case
 
 # Example usage:
-my_case = parse_real_case_json('./India_Kanoon_scraping/docs/allahabad_2015_27309404.json')
+my_case = parse_real_case_json('allahabad_2015_3099880.json')
+print(my_case.keys())
