@@ -1,0 +1,32 @@
+[
+  {
+    "Evidence Cluster": "Witness Testimony (PW)",
+    "Importance Score (%)": 35.36,
+    "Impact Mode": "Negative (Contested)"
+  },
+  {
+    "Evidence Cluster": "FIR/Seizure/PM Reports",
+    "Importance Score (%)": 17.67,
+    "Impact Mode": "Negative (Contested)"
+  },
+  {
+    "Evidence Cluster": "Property Deeds",
+    "Importance Score (%)": 14.53,
+    "Impact Mode": "Negative (Contested)"
+  },
+  {
+    "Evidence Cluster": "Agreements & Contracts",
+    "Importance Score (%)": 11.97,
+    "Impact Mode": "Negative (Contested)"
+  },
+  {
+    "Evidence Cluster": "Medical/FSL Reports",
+    "Importance Score (%)": 10.83,
+    "Impact Mode": "Negative (Contested)"
+  },
+  {
+    "Evidence Cluster": "Other Procedural Docs",
+    "Importance Score (%)": 9.63,
+    "Impact Mode": "Negative (Contested)"
+  }
+]
