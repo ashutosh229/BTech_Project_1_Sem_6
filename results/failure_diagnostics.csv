@@ -1,0 +1,498 @@
+case_id,failed_reason,failure_modes,evidence_count
+sikkim_2025_94532254,Unknown,"['Contradiction', 'Non-Production']",2
+delhidc_2025_96395272,Unknown,['Contradiction'],5
+bangaloredc_2021_162562556,Unknown,"['Contradiction', 'Non-Production']",1
+patna_2024_113570890,Unknown,[],2
+manipur_2025_2326507,Unknown,['Contradiction'],0
+sikkim_2018_180061731,Unknown,[],2
+karnataka_2022_80232376,Unknown,[],0
+jharkhand_2020_57922128,Unknown,[],0
+bombay_2024_27933549,Unknown,"['Contradiction', 'Non-Production']",4
+cci_2020_56296420,Unknown,['Non-Production'],1
+kolkata_app_2020_67123964,Unknown,['Contradiction'],1
+delhidc_2023_82499979,Unknown,[],1
+patna_2021_197366227,Unknown,"['Contradiction', 'Non-Production']",1
+bangaloredc_2020_24266597,Unknown,['Non-Production'],0
+amravati_2024_108023805,Unknown,['Non-Production'],2
+bangaloredc_2021_40761961,Unknown,"['Contradiction', 'Non-Production']",2
+gujarat_2024_14147151,Unknown,"['Contradiction', 'Delay', 'Non-Production']",4
+kolkata_2022_84562036,Unknown,['Contradiction'],0
+delhidc_2024_100699025,Unknown,"['Contradiction', 'Delay', 'Benefit of Doubt / Credibility']",1
+gauhati_2016_197640838,Unknown,['Non-Production'],0
+himachal_pradesh_2025_2871324,Unknown,"['Contradiction', 'Non-Production']",2
+aptel_2021_60692634,Unknown,"['Contradiction', 'Delay']",2
+bangaloredc_2023_72153615,Unknown,[],1
+delhiorders_2024_39758462,Unknown,[],2
+itat_2018_61006865,Unknown,['Contradiction'],2
+scorders_2017_164616557,Unknown,[],4
+cat_2024_68143860,Unknown,['Non-Production'],1
+bangaloredc_2025_61319888,Unknown,['Non-Production'],3
+bombay_2024_103344531,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2019_116562413,Unknown,['Non-Production'],3
+bombay_2024_177065596,Unknown,"['Contradiction', 'Non-Production']",4
+amravati_2024_28924461,Unknown,['Non-Production'],2
+cestat_2018_86499893,Unknown,[],0
+cci_2022_92499597,Unknown,[],1
+delhidc_2024_198594415,Unknown,['Non-Production'],2
+delhidc_2019_57459175,Unknown,[],1
+himachal_pradesh_2025_49912367,Unknown,['Contradiction'],3
+sebisat_2018_43667004,Unknown,[],0
+himachal_pradesh_2016_82066783,Unknown,['Contradiction'],2
+bangaloredc_2025_167219511,Unknown,"['Contradiction', 'Non-Production']",4
+delhidc_2016_51256953,Unknown,['Contradiction'],1
+patna_2020_167622842,Unknown,['Contradiction'],1
+gujarat_2024_76025335,Unknown,[],2
+jodhpur_2023_100698215,Unknown,[],0
+sebisat_2019_33248070,Unknown,[],1
+delhidc_2024_100714711,Unknown,"['Contradiction', 'Non-Production']",4
+delhidc_2017_60505660,Unknown,[],1
+bangaloredc_2016_48542520,Unknown,['Non-Production'],1
+itat_2025_141269227,Unknown,['Contradiction'],3
+tripura_2021_196661071,Unknown,['Delay'],1
+gujarat_2024_139785517,Unknown,"['Contradiction', 'Delay', 'Non-Production']",6
+delhi_2024_87079671,Unknown,['Contradiction'],2
+bangaloredc_2023_173575149,Unknown,['Non-Production'],4
+delhidc_2016_120117853,Unknown,[],1
+delhidc_2016_8620425,Unknown,['Non-Production'],1
+cat_2024_136264519,Unknown,['Non-Production'],1
+scorders_2022_40567046,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2023_120584196,Unknown,"['Contradiction', 'Non-Production']",1
+delhidc_2018_23126402,Unknown,[],1
+sebisat_2023_11319212,Unknown,[],0
+itat_2025_67220494,Unknown,"['Contradiction', 'Non-Production']",2
+chennai_2019_134656837,Unknown,['Non-Production'],0
+itat_2025_79650383,Unknown,"['Contradiction', 'Non-Production']",2
+himachal_pradesh_2015_124941436,Unknown,[],3
+amravati_2024_14710919,Unknown,[],2
+bangaloredc_2018_120083246,Unknown,['Non-Production'],0
+cci_2024_46027602,Unknown,[],0
+delhidc_2024_103774861,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility']",2
+bangaloredc_2024_147853648,Unknown,"['Delay', 'Non-Production']",4
+sikkim_2019_183406672,Unknown,"['Contradiction', 'Non-Production']",1
+consumer_2022_143684976,Unknown,['Benefit of Doubt / Credibility'],1
+bangaloredc_2021_43793130,Unknown,['Non-Production'],3
+delhidc_2015_185324395,Unknown,[],0
+jaipur_2023_94394065,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+delhidc_2025_74834543,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Delay', 'Non-Production']",2
+bangaloredc_2021_172510631,Unknown,"['Contradiction', 'Non-Production']",3
+tripura_2025_152759975,Unknown,[],1
+consumer_2023_5076160,Unknown,[],0
+delhi_2016_54213868,Unknown,[],0
+delhidc_2023_159253102,Unknown,[],0
+cat_2024_119546975,Unknown,['Non-Production'],1
+bangaloredc_2021_18589513,Unknown,['Non-Production'],2
+delhidc_2015_181169561,Unknown,[],2
+delhidc_2020_135928932,Unknown,['Non-Production'],1
+delhidc_2025_182118427,Unknown,"['Contradiction', 'Non-Production']",4
+madhyapradesh_2019_119822394,Unknown,"['Contradiction', 'Delay']",0
+patna_2025_198304254,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+bombay_2015_139441621,Unknown,"['Contradiction', 'Non-Production']",2
+tdsat_2023_177428145,Unknown,[],1
+himachal_pradesh_2025_138987765,Unknown,"['Contradiction', 'Non-Production']",2
+bangaloredc_2018_163646628,Unknown,[],1
+delhidc_2024_72034462,Unknown,"['Benefit of Doubt / Credibility', 'Non-Production']",4
+bangaloredc_2025_123988759,Unknown,"['Contradiction', 'Non-Production']",2
+sikkim_2025_75215860,Unknown,[],1
+bombay_2024_86153079,Unknown,"['Contradiction', 'Non-Production']",4
+amravati_2024_13673632,Unknown,[],2
+delhidc_2019_52149637,Unknown,[],0
+gujarat_2019_131288752,Unknown,[],2
+delhidc_2025_56890388,Unknown,"['Contradiction', 'Non-Production']",2
+cat_2024_157200439,Unknown,['Non-Production'],1
+jaipur_2023_27318819,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+cat_2024_126801352,Unknown,['Non-Production'],1
+delhidc_2016_183792256,Unknown,['Delay'],3
+delhidc_2024_111537632,Unknown,"['Contradiction', 'Non-Production']",4
+cat_2024_131702634,Unknown,['Non-Production'],1
+delhidc_2017_159871176,Unknown,['Non-Production'],2
+cci_2019_164388770,Unknown,"['Contradiction', 'Non-Production']",2
+delhidc_2017_31643481,Unknown,['Delay'],1
+allahabad_2025_124644376,Unknown,['Contradiction'],1
+bangaloredc_2022_15349501,Unknown,['Non-Production'],1
+delhidc_2020_140953014,Unknown,[],0
+himachal_pradesh_2015_132012046,Unknown,[],0
+bangaloredc_2024_172999715,Unknown,['Contradiction'],3
+delhidc_2024_158213464,Unknown,"['Contradiction', 'Non-Production']",3
+bangaloredc_2015_45892873,Unknown,[],1
+cat_2024_156437143,Unknown,['Non-Production'],1
+bangaloredc_2024_9681174,Unknown,"['Contradiction', 'Non-Production']",4
+orissa_2022_78881080,Unknown,['Contradiction'],0
+himachal_pradesh_2018_168693318,Unknown,['Contradiction'],2
+aptel_2020_52637772,Unknown,"['Contradiction', 'Non-Production']",0
+chattisgarh_2019_103877710,Unknown,[],1
+itat_2015_135133342,Unknown,['Contradiction'],0
+bombay_2024_100702859,Unknown,"['Contradiction', 'Non-Production']",4
+delhidc_2022_138754216,Unknown,"['Contradiction', 'Non-Production']",1
+delhidc_2018_86893998,Unknown,[],1
+cci_2018_94830383,Unknown,[],1
+tripura_2025_90843889,Unknown,['Non-Production'],2
+gujarat_2024_45768166,Unknown,"['Contradiction', 'Non-Production']",1
+sikkim_2016_71890754,Unknown,['Contradiction'],2
+chennai_2016_63184895,Unknown,[],2
+delhidc_2024_11125705,Unknown,"['Delay', 'Non-Production']",4
+delhi_2015_11835954,Unknown,"['Contradiction', 'Non-Production']",1
+allahabad_2025_65243670,Unknown,['Non-Production'],4
+sebisat_2016_113934780,Unknown,[],1
+gauhati_2015_45522517,Unknown,[],1
+bangaloredc_2024_40522091,Unknown,"['Delay', 'Non-Production']",1
+delhidc_2020_100890909,Unknown,['Contradiction'],2
+jharkhand_2025_128017297,Unknown,['Non-Production'],2
+bangaloredc_2024_138113227,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",4
+itat_2025_7709598,Unknown,"['Contradiction', 'Non-Production']",2
+itat_2024_62793644,Unknown,['Contradiction'],0
+bangaloredc_2025_55154205,Unknown,['Non-Production'],3
+gujarat_2023_18828785,Unknown,"['Contradiction', 'Delay']",1
+delhidc_2022_93506820,Unknown,[],3
+consumer_2025_95800198,Unknown,[],1
+delhi_2020_105753325,Unknown,['Non-Production'],2
+jaipur_2023_179187667,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+delhidc_2025_121643592,Unknown,[],2
+kolkata_2020_68960616,Unknown,[],1
+delhidc_2024_79385245,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+kolkata_2025_167213948,Unknown,['Contradiction'],2
+bangaloredc_2015_69318932,Unknown,"['Contradiction', 'Non-Production']",1
+himachal_pradesh_2017_13198195,Unknown,[],2
+cestat_2025_6745003,Unknown,[],2
+bangaloredc_2015_41656548,Unknown,[],2
+gauhati_2018_103348277,Unknown,[],1
+delhidc_2019_113112989,Unknown,[],2
+cestat_2025_177043166,Unknown,[],2
+delhidc_2015_170030332,Unknown,[],0
+gauhati_2016_25265494,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility']",0
+delhidc_2017_197422377,Unknown,"['Benefit of Doubt / Credibility', 'Non-Production']",0
+delhidc_2016_30814315,Unknown,['Contradiction'],2
+madhyapradesh_2022_102426109,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",1
+sikkim_2017_30799910,Unknown,['Contradiction'],2
+bangaloredc_2019_140071448,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+bangaloredc_2020_192340127,Unknown,"['Benefit of Doubt / Credibility', 'Non-Production']",0
+tdsat_2023_143217366,Unknown,[],1
+gauhati_2016_178249239,Unknown,[],1
+cat_2024_132694520,Unknown,['Non-Production'],1
+delhidc_2020_162432612,Unknown,['Contradiction'],3
+cestat_2025_31700089,Unknown,[],2
+scorders_2024_13128250,Unknown,['Delay'],0
+sebisat_2018_54091905,Unknown,['Contradiction'],0
+bangaloredc_2024_74097006,Unknown,"['Contradiction', 'Non-Production']",3
+uttaranchal_2025_153056030,Unknown,[],1
+jaipur_2023_9877893,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+meghalaya_2023_156770945,Unknown,"['Contradiction', 'Non-Production']",2
+bangaloredc_2024_81434729,Unknown,"['Contradiction', 'Non-Production']",4
+meghalaya_2023_46159029,Unknown,['Contradiction'],2
+tdsat_2024_96951823,Unknown,[],1
+delhidc_2015_128295079,Unknown,"['Contradiction', 'Non-Production']",4
+amravati_2024_57429909,Unknown,['Non-Production'],2
+sikkim_2025_156060247,Unknown,"['Contradiction', 'Non-Production']",2
+jammu_2018_125115574,Unknown,[],2
+cat_2024_48120875,Unknown,['Non-Production'],1
+bangaloredc_2017_119874522,Unknown,['Non-Production'],2
+bangaloredc_2022_23552181,Unknown,['Non-Production'],2
+punjab_2025_135346344,Unknown,[],1
+bangaloredc_2023_93033231,Unknown,"['Contradiction', 'Non-Production']",2
+consumer_2025_164088293,Unknown,['Contradiction'],1
+bangaloredc_2018_162754604,Unknown,['Non-Production'],3
+punjab_2015_145548663,Unknown,[],0
+bangaloredc_2016_11070153,Unknown,[],0
+bangaloredc_2020_141265991,Unknown,"['Contradiction', 'Non-Production']",1
+delhidc_2023_90711606,Unknown,[],1
+delhidc_2023_136455603,Unknown,[],3
+bangaloredc_2019_90115210,Unknown,['Non-Production'],1
+patna_2025_13860906,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+cat_2024_89435874,Unknown,['Non-Production'],1
+bombay_2024_50338383,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2023_8637801,Unknown,[],0
+cestat_2023_137349255,Unknown,"['Contradiction', 'Non-Production']",3
+gauhati_2020_199170843,Unknown,[],0
+delhidc_2025_44930886,Unknown,"['Contradiction', 'Non-Production']",3
+bangaloredc_2015_75992500,Unknown,['Non-Production'],3
+bangaloredc_2019_169462232,Unknown,['Non-Production'],2
+delhidc_2022_65851876,Unknown,[],1
+bombay_2024_180931889,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2024_36330448,Unknown,"['Contradiction', 'Non-Production']",4
+sikkim_2019_58134246,Unknown,['Non-Production'],2
+bangaloredc_2017_69257156,Unknown,"['Contradiction', 'Non-Production']",4
+tdsat_2022_119575350,Unknown,[],1
+patna_2021_129482499,Unknown,"['Contradiction', 'Non-Production']",2
+cestat_2025_45063600,Unknown,[],2
+allahabad_2025_102266962,Unknown,[],2
+jaipur_2023_125644086,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+delhidc_2016_115834516,Unknown,[],2
+madhyapradesh_2018_158285838,Unknown,[],1
+delhiorders_2023_165087826,Unknown,[],0
+delhi_2018_86951577,Unknown,[],1
+sikkim_2017_62949521,Unknown,"['Contradiction', 'Non-Production']",2
+tripura_2018_156247863,Unknown,"['Contradiction', 'Delay']",3
+allahabad_2016_74024055,Unknown,"['Contradiction', 'Non-Production']",3
+tripura_2023_14218198,Unknown,['Delay'],0
+bombay_2024_40593385,Unknown,"['Contradiction', 'Non-Production']",4
+madhyapradesh_2025_130564935,Unknown,"['Delay', 'Non-Production']",2
+delhidc_2025_91263474,Unknown,[],4
+bangaloredc_2019_118881321,Unknown,['Non-Production'],1
+telangana_2018_174473481,Unknown,[],0
+madhyapradesh_2021_41201524,Unknown,['Benefit of Doubt / Credibility'],2
+meghalaya_2020_91296347,Unknown,"['Contradiction', 'Non-Production']",2
+gujarat_2024_136686420,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+gujarat_2023_3114791,Unknown,['Non-Production'],2
+cestat_2025_25206785,Unknown,[],2
+sikkim_2024_110422760,Unknown,[],1
+bangaloredc_2023_38646807,Unknown,[],2
+bombay_2024_95609026,Unknown,"['Contradiction', 'Non-Production']",4
+bombay_2024_172247875,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2017_103439023,Unknown,['Non-Production'],0
+bangaloredc_2019_140113172,Unknown,['Non-Production'],2
+cestat_2017_50932848,Unknown,[],0
+bangaloredc_2025_182449055,Unknown,"['Contradiction', 'Non-Production']",3
+delhidc_2018_87657561,Unknown,[],1
+consumer_2025_57108755,Unknown,['Non-Production'],1
+jammu_2022_123037150,Unknown,['Contradiction'],1
+tripura_2025_78776244,Unknown,['Contradiction'],1
+allahabad_2016_179934166,Unknown,['Contradiction'],1
+sikkim_2019_17922788,Unknown,['Delay'],0
+delhidc_2024_159986820,Unknown,"['Contradiction', 'Non-Production']",3
+delhidc_2016_163449006,Unknown,"['Contradiction', 'Delay', 'Non-Production']",1
+scorders_2025_156005610,Unknown,['Contradiction'],0
+tripura_2017_146159319,Unknown,[],0
+cat_2024_9311810,Unknown,['Non-Production'],1
+bangaloredc_2016_28784518,Unknown,['Non-Production'],1
+allahabad_2025_71945584,Unknown,['Non-Production'],4
+bangaloredc_2018_169519422,Unknown,['Non-Production'],2
+uttaranchal_2023_70368470,Unknown,"['Delay', 'Non-Production']",3
+itat_2025_192408378,Unknown,"['Contradiction', 'Non-Production']",2
+cat_2024_163032200,Unknown,['Non-Production'],1
+cestat_2023_2054146,Unknown,[],1
+bangaloredc_2017_60880681,Unknown,[],2
+delhidc_2019_189756649,Unknown,['Non-Production'],2
+gauhati_2021_164577294,Unknown,['Non-Production'],3
+jharkhand_2024_76482751,Unknown,"['Contradiction', 'Non-Production']",1
+bangaloredc_2025_168138146,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+bangaloredc_2017_89467256,Unknown,[],1
+sikkim_2018_31851046,Unknown,"['Contradiction', 'Non-Production']",2
+tripura_2025_94741524,Unknown,[],1
+bangaloredc_2024_13624521,Unknown,"['Contradiction', 'Non-Production']",4
+jaipur_2023_109261769,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+himachal_pradesh_2016_126083669,Unknown,[],2
+delhidc_2022_174489250,Unknown,"['Benefit of Doubt / Credibility', 'Non-Production']",2
+kolkata_2025_166989210,Unknown,['Contradiction'],2
+tdsat_2023_179985347,Unknown,['Delay'],1
+delhidc_2019_182907818,Unknown,[],1
+sikkim_2018_90116003,Unknown,"['Contradiction', 'Non-Production']",1
+consumer_2016_54394740,Unknown,[],0
+madhyapradesh_2019_130738893,Unknown,['Non-Production'],2
+delhi_2015_116590946,Unknown,[],0
+bangaloredc_2016_46023566,Unknown,['Non-Production'],1
+bangaloredc_2025_10550609,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+bangaloredc_2022_132821837,Unknown,['Non-Production'],2
+gujarat_2024_133572790,Unknown,"['Contradiction', 'Non-Production']",2
+bombay_2024_145184008,Unknown,"['Contradiction', 'Non-Production']",4
+cestat_2025_70159489,Unknown,[],2
+bangaloredc_2016_191182558,Unknown,['Non-Production'],0
+delhidc_2024_142548639,Unknown,['Non-Production'],5
+allahabad_2025_117173815,Unknown,[],3
+delhidc_2025_71464644,Unknown,"['Contradiction', 'Non-Production']",4
+kolkata_app_2020_142672619,Unknown,[],0
+kerala_2019_81819775,Unknown,['Non-Production'],0
+delhidc_2023_51694735,Unknown,[],3
+jaipur_2023_153082838,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+bangaloredc_2017_121619931,Unknown,"['Contradiction', 'Non-Production']",1
+jammu_2023_177254012,Unknown,['Non-Production'],2
+chattisgarh_2017_35482724,Unknown,[],1
+itat_2018_29056251,Unknown,[],0
+bangaloredc_2025_134877268,Unknown,['Benefit of Doubt / Credibility'],2
+cat_2024_193262579,Unknown,['Non-Production'],1
+delhi_2023_64502920,Unknown,[],1
+punjab_2020_64242173,Unknown,[],2
+delhidc_2017_65722488,Unknown,[],3
+sikkim_2024_38731975,Unknown,[],2
+patna_2025_49553575,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+bangaloredc_2019_63847604,Unknown,['Non-Production'],1
+supremecourt_2021_13024806,Unknown,[],1
+tripura_2025_144584301,Unknown,['Non-Production'],2
+delhidc_2024_161141139,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility']",4
+bangaloredc_2020_127591201,Unknown,"['Contradiction', 'Non-Production']",1
+bangaloredc_2017_156140346,Unknown,['Non-Production'],1
+jharkhand_2025_1606624,Unknown,[],0
+tripura_2023_154690202,Unknown,['Non-Production'],3
+gauhati_2022_9995796,Unknown,['Non-Production'],3
+delhidc_2024_176949719,Unknown,"['Contradiction', 'Non-Production']",4
+sikkim_2024_138835388,Unknown,['Non-Production'],2
+bangaloredc_2023_162141464,Unknown,['Non-Production'],5
+sebisat_2017_105757332,Unknown,"['Contradiction', 'Non-Production']",1
+bombay_2024_119473600,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2022_132720100,Unknown,['Non-Production'],1
+itat_2023_138396351,Unknown,['Non-Production'],1
+punjab_2017_108151417,Unknown,[],1
+bangaloredc_2022_175708896,Unknown,['Non-Production'],0
+gujarat_2025_9881306,Unknown,['Non-Production'],2
+patna_2017_103307360,Unknown,[],0
+gujarat_2025_154249795,Unknown,[],1
+uttaranchal_2017_31750884,Unknown,[],0
+tdsat_2022_124393056,Unknown,['Non-Production'],2
+telangana_2023_12851368,Unknown,[],1
+amravati_2021_111490956,Unknown,['Contradiction'],0
+jodhpur_2023_14324087,Unknown,[],0
+madhyapradesh_2019_164156205,Unknown,"['Contradiction', 'Non-Production']",3
+chennai_2016_137720883,Unknown,['Non-Production'],2
+delhidc_2025_39565204,Unknown,['Benefit of Doubt / Credibility'],3
+allahabad_2015_189056190,Unknown,"['Delay', 'Non-Production']",2
+jodhpur_2015_55399387,Unknown,[],0
+allahabad_2025_148762512,Unknown,['Non-Production'],4
+delhidc_2025_31127521,Unknown,"['Contradiction', 'Non-Production']",3
+jammu_2024_160937879,Unknown,['Non-Production'],3
+delhidc_2015_17828009,Unknown,"['Contradiction', 'Delay', 'Non-Production']",1
+itat_2020_194951664,Unknown,['Contradiction'],0
+bangaloredc_2024_161563992,Unknown,"['Contradiction', 'Non-Production']",3
+delhidc_2022_79825667,Unknown,[],1
+bangaloredc_2024_124764120,Unknown,"['Contradiction', 'Non-Production']",2
+delhidc_2019_67854392,Unknown,[],2
+cat_2024_155574599,Unknown,['Non-Production'],1
+delhidc_2016_197888775,Unknown,['Contradiction'],1
+delhidc_2015_75700603,Unknown,['Non-Production'],0
+sikkim_2020_151271542,Unknown,[],1
+patna_2025_91754986,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+aptel_2024_178429271,Unknown,"['Contradiction', 'Delay']",3
+scorders_2016_151514072,Unknown,[],0
+tripura_2021_29034440,Unknown,[],0
+himachal_pradesh_2023_116862963,Unknown,[],0
+sikkim_2024_40868086,Unknown,[],3
+delhidc_2025_57476529,Unknown,"['Contradiction', 'Non-Production']",6
+supremecourt_2016_175903641,Unknown,[],0
+bangaloredc_2019_60532653,Unknown,['Non-Production'],1
+delhidc_2020_72613228,Unknown,['Non-Production'],0
+delhidc_2016_85408977,Unknown,[],0
+bombay_2024_136660421,Unknown,"['Contradiction', 'Non-Production']",4
+bombay_2024_112890129,Unknown,"['Contradiction', 'Non-Production']",4
+chattisgarh_2023_150181936,Unknown,[],1
+madhyapradesh_2017_91854038,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",1
+delhidc_2024_172996885,Unknown,['Non-Production'],4
+delhidc_2024_129138946,Unknown,['Non-Production'],5
+kolkata_2025_29610367,Unknown,['Contradiction'],2
+cat_2024_111569429,Unknown,['Non-Production'],1
+bombay_2024_193494767,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2016_37429316,Unknown,['Non-Production'],0
+bangaloredc_2016_103656939,Unknown,"['Contradiction', 'Non-Production']",1
+itat_2025_77150896,Unknown,['Contradiction'],3
+punjab_2016_116656919,Unknown,[],0
+madhyapradesh_2019_134306556,Unknown,['Non-Production'],2
+cat_2024_104607933,Unknown,['Non-Production'],1
+delhidc_2020_67166496,Unknown,[],3
+himachal_pradesh_2025_87248603,Unknown,['Contradiction'],3
+delhidc_2024_30670776,Unknown,['Non-Production'],3
+chennai_2021_158725675,Unknown,[],0
+delhi_2023_35682636,Unknown,[],1
+cestat_2025_58864602,Unknown,[],2
+madhyapradesh_2015_78532972,Unknown,"['Benefit of Doubt / Credibility', 'Non-Production']",2
+jharkhand_2025_3209857,Unknown,['Non-Production'],2
+himachal_pradesh_2025_188415180,Unknown,"['Contradiction', 'Non-Production']",2
+delhidc_2019_86345219,Unknown,[],3
+delhidc_2025_75319779,Unknown,"['Contradiction', 'Non-Production']",4
+delhi_2018_174974183,Unknown,"['Contradiction', 'Non-Production']",3
+gauhati_2015_135303249,Unknown,[],2
+bangaloredc_2022_199247452,Unknown,"['Contradiction', 'Non-Production']",1
+delhidc_2021_145504340,Unknown,['Non-Production'],0
+jharkhand_2017_163902990,Unknown,[],0
+bangaloredc_2020_94719476,Unknown,['Non-Production'],1
+delhidc_2020_16580419,Unknown,[],2
+jammu_2017_182685676,Unknown,"['Delay', 'Non-Production']",1
+kerala_2015_43764027,Unknown,[],1
+patna_2025_113837043,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+kolkata_2025_15771377,Unknown,['Contradiction'],2
+itat_2015_121050906,Unknown,['Non-Production'],1
+delhidc_2019_172390071,Unknown,['Contradiction'],3
+amravati_2019_178173223,Unknown,[],1
+cat_2024_7205230,Unknown,['Non-Production'],1
+karnataka_2015_21661501,Unknown,[],1
+bangaloredc_2024_131815597,Unknown,['Non-Production'],3
+delhidc_2024_18549399,Unknown,[],3
+delhidc_2015_112228278,Unknown,[],0
+patna_2025_191813780,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Non-Production']",3
+sebisat_2015_85632185,Unknown,"['Contradiction', 'Delay', 'Non-Production']",1
+jammu_2019_27990892,Unknown,[],3
+bombay_2024_144220837,Unknown,"['Contradiction', 'Non-Production']",4
+supremecourt_2018_29030278,Unknown,[],0
+sikkim_2025_65583604,Unknown,[],2
+madhyapradesh_2021_63314772,Unknown,"['Contradiction', 'Non-Production']",4
+cat_2024_17022864,Unknown,['Non-Production'],1
+delhidc_2021_132108917,Unknown,['Delay'],2
+bangaloredc_2021_167595483,Unknown,[],2
+bombay_2024_141757980,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2020_68456942,Unknown,"['Contradiction', 'Non-Production']",1
+tripura_2025_10640791,Unknown,['Non-Production'],2
+kolkata_2025_123666155,Unknown,['Contradiction'],2
+madhyapradesh_2022_156905381,Unknown,[],1
+delhiorders_2021_105371799,Unknown,['Non-Production'],0
+bangaloredc_2023_193338036,Unknown,"['Contradiction', 'Non-Production']",3
+cat_2024_145908966,Unknown,['Non-Production'],1
+himachal_pradesh_2019_113460935,Unknown,['Benefit of Doubt / Credibility'],1
+delhidc_2018_42631524,Unknown,['Non-Production'],2
+himachal_pradesh_2025_133672419,Unknown,"['Contradiction', 'Non-Production']",2
+bangaloredc_2019_179098102,Unknown,['Non-Production'],0
+bangaloredc_2025_41145210,Unknown,[],2
+jharkhand_2019_77408706,Unknown,['Non-Production'],0
+allahabad_2024_158439322,Unknown,[],2
+bangaloredc_2023_110514357,Unknown,['Non-Production'],0
+sikkim_2023_183306789,Unknown,['Non-Production'],0
+manipur_2024_126680042,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+cat_2017_19698649,Unknown,['Contradiction'],0
+tripura_2023_30442101,Unknown,[],3
+kolkata_2023_26504538,Unknown,"['Contradiction', 'Delay', 'Non-Production']",1
+cat_2024_185075119,Unknown,['Non-Production'],1
+delhidc_2022_20191643,Unknown,[],1
+kolkata_2019_136011436,Unknown,[],1
+delhidc_2024_70332624,Unknown,"['Delay', 'Non-Production']",5
+nclat_2023_68603820,Unknown,[],1
+delhidc_2015_58550270,Unknown,[],0
+bangaloredc_2017_69748265,Unknown,['Contradiction'],0
+itat_2021_99457097,Unknown,['Contradiction'],2
+madhyapradesh_2016_185928164,Unknown,['Non-Production'],1
+itat_2025_176530763,Unknown,"['Contradiction', 'Non-Production']",2
+bangaloredc_2020_103416748,Unknown,['Non-Production'],0
+delhidc_2019_133594274,Unknown,['Non-Production'],2
+bangaloredc_2020_77053382,Unknown,['Contradiction'],2
+cestat_2025_195613090,Unknown,[],2
+delhidc_2025_47207604,Unknown,['Contradiction'],4
+andhra_2016_182103933,Unknown,['Non-Production'],0
+delhi_2018_99864603,Unknown,[],2
+bangaloredc_2023_94163626,Unknown,[],0
+aptel_2021_104188921,Unknown,"['Contradiction', 'Non-Production']",1
+bangaloredc_2021_21200169,Unknown,"['Contradiction', 'Non-Production']",1
+bombay_2024_79207682,Unknown,"['Contradiction', 'Non-Production']",4
+bangaloredc_2015_77181677,Unknown,"['Contradiction', 'Non-Production']",2
+madhyapradesh_2022_191061968,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Delay', 'Non-Production']",4
+delhidc_2018_70474247,Unknown,[],1
+supremecourt_2017_68696327,Unknown,"['Contradiction', 'Benefit of Doubt / Credibility', 'Delay', 'Non-Production']",4
+cestat_2025_92680367,Unknown,[],0
+chattisgarh_2025_116107350,Unknown,[],1
+bangaloredc_2016_18155518,Unknown,[],0
+itat_2023_88261455,Unknown,"['Contradiction', 'Delay']",2
+himachal_pradesh_2019_82468744,Unknown,['Non-Production'],1
+andhra_2018_16577641,Unknown,[],2
+bangaloredc_2023_154469932,Unknown,['Non-Production'],1
+tdsat_2022_184044875,Unknown,[],1
+himachal_pradesh_2018_141580510,Unknown,['Contradiction'],1
+nclat_2022_52478465,Unknown,['Contradiction'],0
+delhidc_2021_68111290,Unknown,[],0
+manipur_2024_64530329,Unknown,[],0
+sikkim_2019_147357731,Unknown,[],2
+bangaloredc_2020_12189972,Unknown,"['Contradiction', 'Non-Production']",2
+chattisgarh_2020_154577677,Unknown,[],1
+sikkim_2018_177242024,Unknown,"['Contradiction', 'Non-Production']",2
+sikkim_2023_195785660,Unknown,[],1
+cestat_2025_25432483,Unknown,[],2
+karnataka_2019_18188246,Unknown,['Non-Production'],0
+bangaloredc_2020_170677252,Unknown,[],1
+delhidc_2023_175292583,Unknown,[],1
+bangaloredc_2017_28795774,Unknown,['Non-Production'],2
+bangaloredc_2020_185676110,Unknown,['Non-Production'],1
+jharkhand_2025_189924144,Unknown,[],2
+jharkhand_2024_132753973,Unknown,['Non-Production'],0
+jaipur_2023_186341437,Unknown,"['Contradiction', 'Delay', 'Non-Production']",3
+jammu_2021_63904599,Unknown,['Contradiction'],2
+bangaloredc_2024_7669070,Unknown,"['Contradiction', 'Non-Production']",2
+tripura_2019_109469487,Unknown,['Contradiction'],3
+delhidc_2021_115857325,Unknown,"['Delay', 'Non-Production']",2
+sikkim_2019_87102978,Unknown,['Non-Production'],0
+jharkhand_2025_141456448,Unknown,['Non-Production'],2
+bangaloredc_2018_174726014,Unknown,['Non-Production'],0
+bangaloredc_2025_190461536,Unknown,['Contradiction'],1
+delhidc_2022_124722397,Unknown,"['Contradiction', 'Delay', 'Non-Production']",1
+karnataka_2021_56167507,Unknown,"['Contradiction', 'Non-Production']",1
+sikkim_2023_51592805,Unknown,"['Contradiction', 'Non-Production']",3
