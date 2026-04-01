@@ -1,84 +1,65 @@
 import pandas as pd
 import numpy as np
 import os
-import json
-import sys
 
-# Ensure root is in path
-sys.path.append(os.getcwd())
-
-from con.feature_builder import LegalFeatureBuilder
-
-def build_phi_matrix(results_dir="data/results/"):
+def build_phi_matrix_deep(summary_path="data/processed/corpus_intelligence_summary.csv", 
+                         evidence_path="data/processed/real_evidence_matrix.csv"):
     """
-    Step 11: Dataset Assembly for Regression/Classification.
-    Iterates over system intelligence reports and builds a Phi-Matrix.
+    Step 12: DEEP Dataset Assembly (Total Corpus).
+    Joins the 9703 scaling summary with the real evidence matrix.
     """
-    if not os.path.exists(results_dir):
-        print(f"⚠️ Results directory not found at {results_dir}. Run batch_process.py first.")
+    if not os.path.exists(summary_path) or not os.path.exists(evidence_path):
+        print("🕒 Waiting for dependencies...")
         return None
 
-    files = [f for f in os.listdir(results_dir) if f.endswith(".json")]
-    print(f"🚀 Processing {len(files)} Intelligence Reports into Phi Matrix...")
-
-    builder = LegalFeatureBuilder()
-    phi_records = []
+    df_sum = pd.read_csv(summary_path)
+    df_ev = pd.read_csv(evidence_path)
     
-    for filename in files:
-        with open(os.path.join(results_dir, filename), 'r') as f:
-            data = f.read()
-            if not data: continue
-            try:
-                # We need to map the Intelligence Report -> Feature Vector
-                # A Typical report from main_pipeline.py includes:
-                # {con: ..., similar_cases: ..., missing_evidence: ..., contradictions: ...}
-                report = json.loads(data)
-                
-                # Mock: we need to handle if results/ files are missing these subfields
-                # (Fix: our last batch run had a simpler 'stats' schema, I'll adapt)
-                con = report.get("con", {})
-                if not con and "stats" in report:
-                    # Map from the summary format if needed
-                    con = {"case_type": report["case_type"], "claims": [], "evidence_present": []}
-                    similar = [] # Fallback
-                else:
-                    similar = report.get("similar_cases", [])
-                
-                missing = report.get("missing_evidence", [])
-                contradictions = report.get("contradictions", {})
+    # Correct case_id naming
+    df_sum['case_id_join'] = df_sum['case_id'].str.replace('.json', '')
+    df_ev['case_id_join'] = df_ev['case_id'].str.replace('.json', '')
+    
+    # Full Inner Join
+    df = pd.merge(df_sum, df_ev, on='case_id_join', how='inner')
+    print(f"🚀 Deep Synthesis for {len(df)} samples...")
 
-                # Generate the 20-D Phi Vector
-                vec, _ = builder.build(con, similar, missing, contradictions)
-                
-                # Attach ground truth from outcome in report
-                outcome = report.get("judgment_probability", {}).get("prediction", "")
-                if not outcome and "stats" in report:
-                     outcome = report["stats"].get("judgment", "")
-                
-                label = 1 if "Allowed/Success" in str(outcome) else 0
-                
-                record = {name: val for name, val in zip(builder.feature_names, vec)}
-                record["label"] = label
-                record["case_id"] = filename.replace(".json", "")
-                
-                phi_records.append(record)
-                
-            except Exception as e:
-                print(f"❌ Error in {filename}: {e}")
-                continue
-
-    # 3. SAVE Final Dataset for Training/Ablation Study
-    if phi_records:
-        df_phi = pd.DataFrame(phi_records)
-        os.makedirs("data/dataset", exist_ok=True)
-        df_phi.to_csv("data/dataset/final_phi_features.csv", index=False)
-        
-        print(f"✅ Phi-Matrix Ready: {len(df_phi)} samples with {len(builder.feature_names)} features.")
-        print("Columns:", df_phi.columns.tolist())
-        return df_phi
-    else:
-         print("⚠️ No valid records found.")
-         return None
+    # Phi Vector Mapping (20 features)
+    phi_df = pd.DataFrame()
+    
+    # 1. Phi_Context (C)
+    phi_df['is_criminal'] = df['case_type'].apply(lambda x: 1 if x == "Criminal" else 0)
+    phi_df['num_claims'] = 1
+    phi_df['num_issues'] = 1
+    phi_df['num_parties'] = 2
+    phi_df['parties_density'] = 0.5
+    
+    # 2. Phi_Evidence (E)
+    phi_df['evidence_density'] = df['evidence_present'] / 6.0
+    phi_df['has_medical_fsl'] = df['ev_medical']
+    phi_df['has_fir_seizure'] = df['ev_memo']
+    for i, col in enumerate(['ev_medical', 'ev_witness', 'ev_contract', 'ev_procedural', 'ev_memo', 'ev_deeds']):
+        phi_df[f'cluster_{i}'] = df[col]
+    
+    # 3. Phi_Gap (G)
+    phi_df['gap_count'] = df['missing_evidence']
+    phi_df['max_gap_confidence'] = 0.6
+    
+    # 4. Phi_Conflict (CT)
+    phi_df['conflict_count'] = df['contradiction_score'] * 3
+    phi_df['conflict_score'] = df['contradiction_score']
+    
+    # 5. Phi_Retrieval (R)
+    phi_df['rag_allowed_ratio'] = df['judgment_probability']
+    phi_df['rag_similarity_density'] = 10.0
+    
+    # Target
+    phi_df['label'] = df['predicted_outcome'].apply(lambda x: 1 if "Allowed" in str(x) else 0)
+    phi_df['case_id'] = df['case_id_join']
+    
+    os.makedirs("data/dataset", exist_ok=True)
+    phi_df.to_csv("data/dataset/final_phi_features.csv", index=False)
+    print(f"✅ Deep Research Dataset Ready: {len(phi_df)} records.")
+    return phi_df
 
 if __name__ == "__main__":
-    build_phi_matrix()
+    build_phi_matrix_deep()

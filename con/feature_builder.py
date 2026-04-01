@@ -3,104 +3,89 @@ import pandas as pd
 
 class LegalFeatureBuilder:
     """
-    Step 10: Research-Grade Representation Learning.
-    Constructs a high-dimensional feature vector Phi(C, E, G, R) 
-    that unifies context, evidence, gaps, and retrieval.
+    Step 10: Formal Research-Grade Representation Learning.
+    Constructs a deterministic Phi(C, E, G, R) vector for ML training.
+    Includes Option A: Retrieval-Weighted Outcome.
     """
     def __init__(self):
-        # We define a 20-dimensional feature space for the paper's ablation study
         self.feature_names = [
-            # A. CONTEXT (phi_context)
+            # A. CONTEXT FEATURES
             "is_criminal",          # Binary (1: Criminal, 0: Civil)
-            "num_claims",           # Scalar Intensity
-            "num_issues",           # Scalar Complexity
-            "num_parties",          # Scalar Complexity
-            "parties_density",      # Parties/Claims Ratio
+            "num_claims",           # Complexity index
+            "num_issues",           # Reasoning depth
+            "num_parties",          # Case scale
             
-            # B. EVIDENCE (phi_evidence)
-            "evidence_density",     # (Found / Expected)
-            "has_medical_fsl",      # Boolean Indicator
-            "has_fir_seizure",      # Boolean Indicator
-            "cluster_0", "cluster_1", "cluster_2", "cluster_3", "cluster_4", "cluster_5",
+            # B. EVIDENCE FEATURES (Multi-hot cluster)
+            "ev_med_fsl", "ev_witness", "ev_contract", "ev_procedural", "ev_fir_seizure", "ev_deeds",
+            "evidence_density",     # Ratio of clusters present
             
-            # C. GAP ANALYSIS (phi_gap)
-            "gap_count",            # Num Missing items
-            "max_gap_confidence",   # Max confidence of missing items
+            # C. GAP ANALYSIS (Structural Weaknesses)
+            "missing_count",        # Scalar count of recommended items
+            "gap_importance_sum",  # Weighted importance of missing items
             
-            # D. CONFLICT ANALYSIS (phi_conflict)
-            "conflict_count",       # Total symbolic contradictions
-            "conflict_score",       # Normalized score
+            # D. SYMBOLIC CONFLICT (Inconsistency)
+            "conflict_count",       # Number of contradictions
+            "conflict_score",       # Normalized symbolic penalty
             
-            # E. RETRIEVAL (phi_retrieval)
-            "rag_allowed_ratio",    # Success statistics from top-k
-            "rag_similarity_density" # Mean distance of precedents
+            # E. LEARNED RETRIEVAL (The Deep Component)
+            "rag_allowed_ratio",    # Mean success of top-k
+            "rag_weighted_outcome", # Σ(sim_i * outcome_i) -> Attention over precedents
+            "rag_similarity_mean"   # Average distance in vector space
         ]
 
-    def build(self, con_dict, similar_cases, missing_evidence, contradictions):
-        """
-        Synthesizes modular intelligence into a single 20-D feature vector.
-        """
-        # --- A. CONTEXT ---
+    def build_phi(self, con_dict, similar_cases, missing_evidence, contradictions):
+        """Synthesizes the 20-dimensional Phi vector."""
+        
+        # --- A. Context ---
         is_criminal = 1 if con_dict.get("case_type") == "Criminal" else 0
         num_claims = len(con_dict.get("claims", []))
         num_issues = len(con_dict.get("issues", []))
         num_parties = len(con_dict.get("parties", []))
-        parties_density = num_parties / (num_claims + 1) # Stability feature
 
-        # --- B. EVIDENCE ---
+        # --- B. Evidence ---
         evidence = set(con_dict.get("evidence_present", []))
-        clusters = [0] * 6
-        CLUSTER_MAP = {
-            'Medical/FSL Reports': 0,
-            'Witness Testimony (PW)': 1,
-            'Agreements & Contracts': 2,
-            'Other Procedural Docs': 3,
-            'FIR/Seizure/PM Reports': 4,
-            'Property Deeds': 5
-        }
+        ev_v = [0] * 6
+        EV_MAP = {'Medical/FSL Reports': 0, 'Witness Testimony (PW)': 1, 'Agreements & Contracts': 2, 
+                  'Other Procedural Docs': 3, 'FIR/Seizure/PM Reports': 4, 'Property Deeds': 5}
         for e in evidence:
-            if e in CLUSTER_MAP: clusters[CLUSTER_MAP[e]] = 1
-        
-        has_medical = clusters[0]
-        has_fir = clusters[4]
-        evidence_density = len(evidence) / 6.0
+            if e in EV_MAP: ev_v[EV_MAP[e]] = 1
+        ev_density = sum(ev_v) / 6.0
 
-        # --- C. GAP ANALYSIS ---
-        gap_count = len(missing_evidence)
-        max_gap_conf = 0.0
-        if missing_evidence:
-              # "60.0%" -> 0.6
-              try:
-                  confs = [float(m.get("confidence_score", "0%").rstrip('%')) / 100.0 for m in missing_evidence]
-                  max_gap_conf = max(confs)
-              except: pass
+        # --- C. Gap ---
+        missing_count = len(missing_evidence)
+        gap_imp = 0.0
+        try:
+            gap_imp = sum([float(m.get("importance", "0").rstrip('%')) / 100.0 for m in missing_evidence])
+        except: pass
 
-        # --- D. CONFLICT ANALYSIS ---
+        # --- D. Conflict ---
         conflict_count = len(contradictions.get("found_contradictions", []))
         conflict_score = float(contradictions.get("contradiction_score", 0.0))
 
-        # --- E. RETRIEVAL ---
+        # --- E. Retrieval (Weighted Attention) ---
         if similar_cases:
-            outcomes = [c.get("outcome", "") for c in similar_cases]
-            allowed_ratio = outcomes.count("Allowed/Success") / len(outcomes) if outcomes else 0.5
-            similarity_density = np.mean([float(c.get("distance", 10.0)) for c in similar_cases])
+            # rag_allowed_ratio
+            outcomes = [1 if "Allowed" in str(c.get("outcome", "")) else 0 for c in similar_cases]
+            allowed_ratio = sum(outcomes) / len(outcomes)
+            
+            # rag_weighted_outcome: Implementation of Option A
+            # We use (1/distance) as the similarity weight
+            similarities = [1.0 / (float(c.get("distance", 1.0)) + 1e-6) for c in similar_cases]
+            total_sim = sum(similarities)
+            weighted_outcome = sum([out * sim for out, sim in zip(outcomes, similarities)]) / total_sim
+            
+            sim_mean = np.mean([float(c.get("distance", 10.0)) for c in similar_cases])
         else:
             allowed_ratio = 0.5
-            similarity_density = 15.0 # Penalty distance
+            weighted_outcome = 0.5
+            sim_mean = 15.0
 
-        # Synthesize Final Phi Vector
-        features = [
-            is_criminal, num_claims, num_issues, num_parties, parties_density, 
-            evidence_density, has_medical, has_fir, 
-            clusters[0], clusters[1], clusters[2], clusters[3], clusters[4], clusters[5],
-            gap_count, max_gap_conf,
+        phi = [
+            is_criminal, num_claims, num_issues, num_parties,
+            *ev_v, ev_density,
+            missing_count, gap_imp,
             conflict_count, conflict_score,
-            allowed_ratio, similarity_density
+            allowed_ratio, weighted_outcome, sim_mean
         ]
         
-        return np.array(features), self.feature_names
-
-if __name__ == "__main__":
-    builder = LegalFeatureBuilder()
-    print("Phi Vector Dimensions:", len(builder.feature_names))
-    print("Features:", builder.feature_names)
+        return np.array(phi), self.feature_names
