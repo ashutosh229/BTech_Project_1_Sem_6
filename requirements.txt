@@ -2,4 +2,13 @@ requests
 beautifulsoup4
 lxml
 playwright
-beautifulsoup4
+scikit-learn
+xgboost
+pandas
+numpy
+matplotlib
+seaborn
+faiss-cpu
+sentence-transformers
+joblib
+tqdm
