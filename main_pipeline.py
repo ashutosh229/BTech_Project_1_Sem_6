@@ -48,14 +48,35 @@ class UnifiedInferenceEngine:
             outcomes = [c.get("outcome", "") for c in similar_cases]
             success_ratio = outcomes.count("Allowed/Success") / len(outcomes) if outcomes else 0.5
 
-        # Feature Vector
-        X_vals = pd.DataFrame([{
+        # Feature Vector (20-D Phi-Vector)
+        phi_dict = {
             "is_criminal": is_criminal,
-            "evidence_present": len(con_dict.get("evidence_present", [])),
-            "missing_evidence": len(missing),
-            "contradiction_score": contradictions.get("contradiction_score", 0),
-            "judgment_probability": success_ratio
-        }])
+            "num_claims": len(con_dict.get("claims", [])) if con_dict.get("claims") else 1,
+            "num_issues": len(con_dict.get("issues", [])) if con_dict.get("issues") else 1,
+            "num_parties": len(con_dict.get("parties", [])) if con_dict.get("parties") else 2,
+            "parties_density": 0.5,
+            
+            "evidence_density": len(con_dict.get("evidence_present", [])) / 6.0,
+            "has_medical_fsl": 1 if "Medical/FSL" in con_dict.get("evidence_present", []) else 0,
+            "has_fir_seizure": 1 if "FIR/Seizure/PM" in con_dict.get("evidence_present", []) else 0,
+        }
+        
+        for i in range(6): 
+            phi_dict[f"cluster_{i}"] = 0
+            
+        phi_dict.update({
+            "gap_count": len(missing),
+            "max_gap_confidence": 0.6,
+            
+            "conflict_count": len(contradictions.get("found_contradictions", [])) * 3,
+            "conflict_score": contradictions.get("contradiction_score", 0),
+            
+            "rag_allowed_ratio": success_ratio,
+            "rag_similarity_density": 10.0
+        })
+        
+        # Enforce exact column order as training
+        X_vals = pd.DataFrame([phi_dict])[self.features]
         
         # 2. Model Prediction
         probs = self.model.predict_proba(X_vals)[0]
