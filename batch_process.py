@@ -8,8 +8,8 @@ from tqdm import tqdm
 sys.path.append(os.getcwd())
 
 from pipelines.pipeline1_old_cases.parse_case_json import parse_real_case_json
-from pipelines.pipeline1_old_cases.evidence_extractor import extract_evidence
 from con.builder import build_con
+from con.feature_builder import LegalFeatureBuilder
 from retrieval.search import LegalSearcher
 from models.missing_evidence.recommendation import find_missing_evidence
 from models.contradiction.detect import detect_contradictions
@@ -33,11 +33,15 @@ class FullSystemOrchestrator:
         # Load models once
         print("🚀 [1/3] Preparing Intelligence Engines...")
         self.searcher = LegalSearcher()
+        self.feature_builder = LegalFeatureBuilder()
         print("✅ Models Warm.")
 
-    def run_all(self):
+    def run_all(self, limit=None):
         """Processes all 9,703 cases."""
         files = [f for f in os.listdir(self.raw_dir) if f.endswith(".json")]
+        files.sort()
+        if limit is not None:
+            files = files[:limit]
         
         print(f"🚀 [2/3] Processing {len(files)} cases with Unified Pipeline...")
         
@@ -54,17 +58,20 @@ class FullSystemOrchestrator:
                 missing = find_missing_evidence(con, similar)
                 contradictions = detect_contradictions(con)
                 judgment = predict_judgment(con, similar)
+                phi_dict = self.feature_builder.build_phi_dict(con, similar, missing, contradictions)
 
                 # 2. Extract Key Metrics for CSV
                 record = {
                     "case_id": filename.replace(".json", ""),
                     "case_type": con["case_type"],
+                    "true_outcome": con.get("outcome", "Unknown"),
                     "evidence_present": len(con["evidence_present"]),
                     "missing_evidence": len(missing),
                     "contradiction_score": contradictions["contradiction_score"],
                     "judgment_probability": float(judgment["confidence"].replace("%", "")) / 100.0,
-                    "predicted_outcome": judgment["prediction"]
+                    "predicted_outcome": judgment["prediction"],
                 }
+                record.update(phi_dict)
                 
                 batch_results.append(record)
                 
@@ -86,4 +93,5 @@ class FullSystemOrchestrator:
 
 if __name__ == "__main__":
     orchestrator = FullSystemOrchestrator()
-    orchestrator.run_all()
+    limit = os.environ.get("BATCH_LIMIT")
+    orchestrator.run_all(limit=int(limit) if limit else None)

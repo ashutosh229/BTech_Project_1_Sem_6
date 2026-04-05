@@ -14,6 +14,7 @@ class CaseCON:
     claims: List[dict] = field(default_factory=list)
     administrative_actions: List[str] = field(default_factory=list)
     evidence_present: List[str] = field(default_factory=list)
+    evidence_profile: dict = field(default_factory=dict)
     claim_outcomes: List[str] = field(default_factory=list)
     outcome: Optional[str] = "Unknown"
 
@@ -26,6 +27,7 @@ class CaseCON:
             "claims": self.claims,
             "administrative_actions": self.administrative_actions,
             "evidence_present": self.evidence_present,
+            "evidence_profile": self.evidence_profile,
             "claim_outcomes": self.claim_outcomes,
             "outcome": self.outcome
         }

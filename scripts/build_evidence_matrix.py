@@ -7,7 +7,7 @@ import sys
 
 # Ensure root is in path
 sys.path.append(os.getcwd())
-from pipelines.pipeline1_old_cases.evidence_extractor import extract_evidence
+from pipelines.pipeline1_old_cases.evidence_extractor import extract_evidence_features
 
 def build_total_evidence_matrix(data_dir="data/"):
     """
@@ -29,8 +29,8 @@ def build_total_evidence_matrix(data_dir="data/"):
                     for section in data["elements_by_title"].values():
                         all_text += " ".join([elem.get("text", "") for elem in section if isinstance(elem, dict)])
                 
-                # Extract 6-D Vector
-                vec, counts = extract_evidence(all_text)
+                features = extract_evidence_features(all_text)
+                vec = features["coarse_vector"]
                 
                 record = {
                     "case_id": filename.replace(".json", ""),
@@ -40,8 +40,14 @@ def build_total_evidence_matrix(data_dir="data/"):
                     "ev_procedural": vec[3],
                     "ev_memo": vec[4],
                     "ev_deeds": vec[5],
-                    "ev_total_matches": counts.get("matches", 0)
+                    "ev_total_matches": int(sum(features["fine_counts"].values()))
                 }
+
+                for feature_name, value in features["fine_binary"].items():
+                    record[f"fg_{feature_name}"] = value
+                for feature_name, value in features["fine_counts"].items():
+                    record[f"fgcnt_{feature_name}"] = value
+
                 records.append(record)
         except Exception as e:
             continue

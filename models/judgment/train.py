@@ -8,25 +8,46 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def train_system_model(X_path="data/dataset/X_features.csv", y_path="data/dataset/y_labels.csv"):
+def train_system_model(
+    dataset_path="data/dataset/final_phi_features.csv",
+    X_path="data/dataset/X_features.csv",
+    y_path="data/dataset/y_labels.csv",
+):
     """
     Step 9: Training Loop for the Judgment Inference Model.
     The primary 'AI' of the system that learns from historical evidentiary signals.
     """
-    if not os.path.exists(X_path):
-        print(f"⚠️ Dataset not found at {X_path}. Run scripts/prepare_dataset.py first.")
-        return
+    if os.path.exists(dataset_path):
+        df = pd.read_csv(dataset_path)
+        if "label" not in df.columns:
+            print(f"⚠️ label column missing in {dataset_path}.")
+            return
+        drop_cols = [c for c in ["case_id", "true_outcome", "label"] if c in df.columns]
+        X = df.drop(columns=drop_cols)
+        y = df["label"]
+    else:
+        if not os.path.exists(X_path) or not os.path.exists(y_path):
+            print(f"⚠️ Dataset not found. Run scripts/prepare_dataset.py first.")
+            return
 
-    # 1. Loading Training Data
-    X = pd.read_csv(X_path)
-    y = pd.read_csv(y_path)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y.values.ravel(), test_size=0.2, random_state=42)
+        # 1. Loading Training Data
+        X = pd.read_csv(X_path)
+        y = pd.read_csv(y_path).values.ravel()
+
+    X_train, X_test, y_train, y_test = train_test_split(X, np.asarray(y).ravel(), test_size=0.2, random_state=42, stratify=np.asarray(y).ravel())
     
     print(f"🚀 Training Judgment Engine on {len(X_train)} samples...")
 
     # 2. Training Gradient Boosting Model
-    model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
+    model = XGBClassifier(
+        n_estimators=250,
+        learning_rate=0.05,
+        max_depth=6,
+        subsample=0.9,
+        colsample_bytree=0.9,
+        eval_metric="logloss",
+        random_state=42,
+    )
     model.fit(X_train, y_train)
 
     # 3. Model Evaluation
@@ -36,7 +57,8 @@ def train_system_model(X_path="data/dataset/X_features.csv", y_path="data/datase
     print("\n📝 Classification Report:\n", classification_report(y_test, y_pred))
 
     # 4. Feature Importance (THE WOW FACTOR)
-    plt.figure(figsize=(10, 6))
+    os.makedirs("outputs/plots", exist_ok=True)
+    plt.figure(figsize=(12, 10))
     importances = model.feature_importances_
     indices = np.argsort(importances)[::-1]
     sorted_features = [X.columns[i] for i in indices]

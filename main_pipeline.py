@@ -8,8 +8,8 @@ import joblib
 sys.path.append(os.getcwd())
 
 from pipelines.pipeline1_old_cases.parse_case_json import parse_real_case_json
-from pipelines.pipeline1_old_cases.evidence_extractor import extract_evidence
 from con.builder import build_con
+from con.feature_builder import LegalFeatureBuilder
 
 # Reasoning imports for Step 5, 6 & 7
 from retrieval.search import retrieve_similar_cases
@@ -22,6 +22,7 @@ class UnifiedInferenceEngine:
     Uses the trained XGBoost model to provide evidentiary-aware outcome forecasting.
     """
     def __init__(self, model_path="data/processed/judgment_model.joblib"):
+        self.feature_builder = LegalFeatureBuilder()
         if os.path.exists(model_path):
             artifact = joblib.load(model_path)
             self.model = artifact["model"]
@@ -38,42 +39,12 @@ class UnifiedInferenceEngine:
              from models.judgment.predict import predict_judgment
              return predict_judgment(con_dict, similar_cases)
 
-        # 1. Map to Feature Space
-        is_criminal = 1 if con_dict.get("case_type") == "Criminal" else 0
-        conf_str = "50%" # Default
-        
-        # Pull stats from retrieval if available
-        success_ratio = 0.5
-        if similar_cases:
-            outcomes = [c.get("outcome", "") for c in similar_cases]
-            success_ratio = outcomes.count("Allowed/Success") / len(outcomes) if outcomes else 0.5
-
-        # Feature Vector (20-D Phi-Vector)
-        phi_dict = {
-            "is_criminal": is_criminal,
-            "num_claims": len(con_dict.get("claims", [])) if con_dict.get("claims") else 1,
-            "num_issues": len(con_dict.get("issues", [])) if con_dict.get("issues") else 1,
-            "num_parties": len(con_dict.get("parties", [])) if con_dict.get("parties") else 2,
-            "parties_density": 0.5,
-            
-            "evidence_density": len(con_dict.get("evidence_present", [])) / 6.0,
-            "has_medical_fsl": 1 if "Medical/FSL" in con_dict.get("evidence_present", []) else 0,
-            "has_fir_seizure": 1 if "FIR/Seizure/PM" in con_dict.get("evidence_present", []) else 0,
-        }
-        
-        for i in range(6): 
-            phi_dict[f"cluster_{i}"] = 0
-            
-        phi_dict.update({
-            "gap_count": len(missing),
-            "max_gap_confidence": 0.6,
-            
-            "conflict_count": len(contradictions.get("found_contradictions", [])) * 3,
-            "conflict_score": contradictions.get("contradiction_score", 0),
-            
-            "rag_allowed_ratio": success_ratio,
-            "rag_similarity_density": 10.0
-        })
+        phi_dict = self.feature_builder.build_phi_dict(
+            con_dict=con_dict,
+            similar_cases=similar_cases,
+            missing_evidence=missing,
+            contradictions=contradictions,
+        )
         
         # Enforce exact column order as training
         X_vals = pd.DataFrame([phi_dict])[self.features]

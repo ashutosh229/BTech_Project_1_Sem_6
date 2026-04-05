@@ -1,89 +1,118 @@
-import os
 import json
 import logging
-import torch
-import numpy as np
-import faiss
+import os
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+
+import faiss
+import numpy as np
+import torch
 from tqdm import tqdm
+from transformers import AutoModel, AutoTokenizer
 
-# --- Configuration ---
-DATA_DIR = "/home/amaydixit11/Desktop/dev/Legal-Intelligence-System/data"
-RESULTS_DIR = "/home/amaydixit11/Desktop/dev/Legal-Intelligence-System/results"
-INDEX_FILE = f"{RESULTS_DIR}/legal_fact_index.faiss"
-ID_MAP_FILE = f"{RESULTS_DIR}/case_indices.json"
-MODEL_NAME = 'law-ai/InLegalBERT'
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
+INDEX_DIR = os.path.join(DATA_DIR, "index")
+INDEX_FILE = os.path.join(INDEX_DIR, "legal_fact_index.faiss")
+ID_MAP_FILE = os.path.join(PROCESSED_DIR, "case_indices.json")
+MODEL_NAME = "law-ai/InLegalBERT"
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
 
 def extract_facts(json_path):
-    """
-    Priority: 1. Fact 2. Analysis and Reasoning sections
-    """
     try:
-        with open(json_path, 'r', encoding='utf-8') as f:
+        with open(json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-    except: return ""
-    
+    except Exception:
+        return ""
+
     elements = data.get("elements_by_title", {})
-    # Priority sections for factual summaries
     sections = [
-        "Fact", 
-        "Analysis of the law", 
+        "Fact",
+        "Issues",
+        "Petitioner's Arguments",
+        "Respondent's Arguments",
+        "Analysis of the law",
         "Court's Reasoning",
-        "Analysis"
+        "Analysis",
     ]
-    
-    fact_text = ""
-    for s in sections:
-        if s in elements:
-            fact_text = " ".join([item.get("text", "") for item in elements[s]]).strip()
-            if len(fact_text) > 200: 
-                break # Found a substantial section
-    
-    # Return first 1000 chars to avoid memory explode
-    return fact_text[:1000].lower()
+
+    chunks = []
+    for section in sections:
+        if section in elements:
+            text = " ".join(item.get("text", "") for item in elements[section]).strip()
+            if text:
+                chunks.append(text[:1500])
+
+    return " ".join(chunks)[:2500].lower()
+
+
+def _mean_pool(last_hidden_state, attention_mask):
+    mask = attention_mask.unsqueeze(-1)
+    masked = last_hidden_state * mask
+    return masked.sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+
+
+def encode_texts(texts, batch_size=16):
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, local_files_only=True)
+    model = AutoModel.from_pretrained(MODEL_NAME, local_files_only=True)
+    model.eval()
+
+    all_embeddings = []
+    for start in tqdm(range(0, len(texts), batch_size), desc="Encoding"):
+        batch = texts[start : start + batch_size]
+        with torch.no_grad():
+            inputs = tokenizer(
+                batch,
+                padding=True,
+                truncation=True,
+                max_length=512,
+                return_tensors="pt",
+            )
+            outputs = model(**inputs)
+            pooled = _mean_pool(outputs.last_hidden_state, inputs["attention_mask"])
+            all_embeddings.append(pooled.cpu().numpy())
+    return np.vstack(all_embeddings).astype("float32")
+
 
 def build_index():
-    # 1. Load Legal BERT Model
-    print(f"🛰️ Loading {MODEL_NAME} for factual embedding...")
-    model = SentenceTransformer(MODEL_NAME)
-    
-    # 2. Collect Factual narratives
-    json_files = list(Path(DATA_DIR).glob('*.json'))
+    json_files = sorted(Path(DATA_DIR).glob("*.json"))
     case_ids = []
     texts = []
-    
-    print(f"📄 Extracting facts from {len(json_files)} judgments...")
-    for path in tqdm(json_files):
+
+    logging.info("Extracting retrieval text from %d judgments...", len(json_files))
+    for path in tqdm(json_files, desc="Collecting corpus"):
         text = extract_facts(path)
         if text:
             case_ids.append(path.stem)
             texts.append(text)
-    
+
     if not texts:
-        print("❌ No useable facts found in the corpus.")
+        logging.error("No usable retrieval text found.")
         return
 
-    # 3. Create Embeddings
-    print(f"🧠 Encoding {len(texts)} case narratives into 768-dim space...")
-    embeddings = model.encode(texts, batch_size=32, show_progress_bar=True)
-    embeddings = np.array(embeddings).astype('float32')
+    logging.info("Encoding %d case narratives with %s...", len(texts), MODEL_NAME)
+    embeddings = encode_texts(texts)
 
-    # 4. Build FAISS Index
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
+    os.makedirs(INDEX_DIR, exist_ok=True)
+    os.makedirs(PROCESSED_DIR, exist_ok=True)
+
+    index = faiss.IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
-    
-    # 5. Save Artifacts
     faiss.write_index(index, INDEX_FILE)
-    with open(ID_MAP_FILE, 'w') as f:
-        json.dump(case_ids, f)
-        
-    print(f"✅ FAISS Semantic Index created with {len(case_ids)} nodes.")
-    print(f"💾 Index: {INDEX_FILE}")
-    print(f"💾 ID Map: {ID_MAP_FILE}")
+
+    with open(ID_MAP_FILE, "w", encoding="utf-8") as f:
+        json.dump(case_ids, f, indent=2)
+
+    logging.info("Saved FAISS index with %d cases.", len(case_ids))
+    logging.info("Index: %s", INDEX_FILE)
+    logging.info("ID Map: %s", ID_MAP_FILE)
+
 
 if __name__ == "__main__":
     build_index()

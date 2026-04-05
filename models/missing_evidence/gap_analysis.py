@@ -2,25 +2,37 @@ import pandas as pd
 import json
 import os
 
-def run_causal_analysis():
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed")
+
+def run_causal_analysis(
+    matrix_file=os.path.join(PROCESSED_DIR, "real_evidence_matrix.csv"),
+    weak_file=os.path.join(PROCESSED_DIR, "weak_case_scores.json"),
+):
     # 1. Load Data
-    matrix_file = "/home/amaydixit11/Desktop/dev/Legal-Intelligence-System/results/case_evidence_matrix.csv"
-    weak_file = "/home/amaydixit11/Desktop/dev/Legal-Intelligence-System/results/failed_cases_index.json"
-    
     if not os.path.exists(matrix_file) or not os.path.exists(weak_file):
         print("Missing data files.")
         return
 
     matrix_df = pd.read_csv(matrix_file)
     with open(weak_file, "r") as f:
-        failed_cases_meta = json.load(f)
+        weak_meta = json.load(f)
 
-    # 2. Tag cases as Failed/Success
-    failed_ids = [c["case_id"] for c in failed_cases_meta]
-    matrix_df["is_weak"] = matrix_df["case_id"].isin(failed_ids)
+    # 2. Tag cases as Weak/Strong using probabilities where available.
+    if isinstance(weak_meta, dict):
+        matrix_df["weak_probability"] = matrix_df["case_id"].map(
+            lambda cid: float(weak_meta.get(cid, {}).get("weak_probability", 0.0))
+        )
+        matrix_df["is_weak"] = matrix_df["weak_probability"] >= 0.60
+    else:
+        failed_ids = [c["case_id"] for c in weak_meta]
+        matrix_df["is_weak"] = matrix_df["case_id"].isin(failed_ids)
 
     # 3. Aggregate Frequencies
-    cluster_cols = [c for c in matrix_df.columns if c.startswith("cluster_")]
+    cluster_cols = [
+        c for c in matrix_df.columns
+        if (c.startswith("ev_") and c != "ev_total_matches") or c.startswith("fg_")
+    ]
     stats = matrix_df.groupby("is_weak")[cluster_cols].mean().transpose()
     
     # After groupby, stats.columns might be [False, True] for is_weak
@@ -32,13 +44,16 @@ def run_causal_analysis():
 
     # 5. Human-Readable Mapping (Based on InLegalBERT Clustering Results)
     cluster_names = {
-        "cluster_0": "Medical/Confession/Inquest Markers",
-        "cluster_1": "Witness Testimony (PW Statements)",
-        "cluster_2": "Agreements & Contracts",
-        "cluster_4": "Criminal Reports (FIR/Seizure/PM)",
-        "cluster_5": "Property Deeds (Sale/Gift/Mortgage)",
-        "cluster_3": "Other Procedural Documents"
+        "ev_medical": "Medical/FSL Reports",
+        "ev_witness": "Witness Testimony (PW)",
+        "ev_contract": "Agreements & Contracts",
+        "ev_memo": "FIR/Seizure/PM Reports",
+        "ev_deeds": "Property Deeds",
+        "ev_procedural": "Other Procedural Documents",
     }
+    for col in cluster_cols:
+        if col.startswith("fg_") and col not in cluster_names:
+            cluster_names[col] = col.replace("fg_", "").replace("_", " ").title()
 
     print("\n" + "="*50)
     print("🧠 CAUSAL IMPORTANCE: THE EVIDENTIARY GAP")
