@@ -1,76 +1,126 @@
-# ⚖️ Running the Evidence Pipeline End-to-End
+# ⚖️ Running the Full Pipeline End-to-End
 
-This document outlines the step-by-step instructions to run the **Evidence Pipeline** (Induction Phase) sequentially from scratch, as well as how to use the pipeline components within the unified inference system.
-
-The Evidence Pipeline relies on multiple scripts located within the `models/missing_evidence/` directory.
+This document outlines the **complete execution sequence** from raw case ingestion to trained ML model with research-grade evaluation metrics.
 
 ---
 
-## Phase 1: Pre-computation and Modeling (Training/Setup)
+## Prerequisites
 
-Before running the dashboard or individual predictions, the core indices and models for weak case detection and evidence priority need to be built. Make sure your Python virtual environment is activated and requirements are installed.
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-*Note: These scripts expect your raw json case files to be in `data/` and will output artifacts to `data/processed/` or `results/`.*
+---
+
+## Phase 1: Evidence Index Construction
 
 ### Step 1: Weak Case Detection
-Finds and scores weak/failed cases using semantic and text pattern extraction, outputting probabilistic scores for every case.
+Builds a probabilistic weak-case index using TF-IDF + Logistic Regression ensemble.
 
 ```bash
 python models/missing_evidence/weak_case_detection.py
 ```
-**Artifacts Generated:**
-- `data/processed/failed_cases_index.json`
-- `data/processed/weak_case_scores.json`
-- `data/processed/weak_case_scores.csv`
-- `data/processed/weak_case_model.joblib`
+**Outputs:** `data/processed/failed_cases_index.json`, `weak_case_scores.json`, `weak_case_model.joblib`
 
 ### Step 2: Causal Importance Ranking
-Uses Random Forest and Gradient Boosting to measure the statistical importance of different evidence clusters (e.g., Medical Reports, Witness Testimony) regarding successful vs. weak outcomes.
+Trains ensemble models (GradientBoosting + RandomForest + LogReg) to rank evidence clusters.
 
 ```bash
 python models/missing_evidence/importance.py
 ```
-**Artifacts Generated:**
-- `data/processed/outcome_predictor.joblib`
-- `outputs/causal_ranking.json`
+**Outputs:** `data/processed/outcome_predictor.joblib`, `outputs/causal_ranking.json`
 
 ### Step 3: Evidentiary Gap Analysis
-Aggregates frequencies to print out the differential probability gap (Success vs. Weak) for each canonical evidence cluster based on the weak-case scores calculated in Step 1.
+Prints the differential gap (Success vs. Weak) per evidence cluster.
 
 ```bash
 python models/missing_evidence/gap_analysis.py
 ```
-*(Prints a human-readable table of Causal Importance and Differential Gaps directly to the terminal).*
 
 ### Step 4: Failure Mode Diagnostics
-Analyzes the weak cases for textual failure modes (e.g., Delay, Contradiction, Non-Production of evidence) and produces statistical summaries.
+Classifies weak cases by failure mode (Delay, Contradiction, Non-Production).
 
 ```bash
 python models/missing_evidence/diagnostics.py
 ```
-**Artifacts Generated:**
-- `results/failure_diagnostics.csv`
+**Outputs:** `results/failure_diagnostics.csv`
 
 ---
 
-## Phase 2: Live Inference (Using the Pipeline)
+## Phase 2: Batch Corpus Processing (Φ-Vector Generation)
 
-Once the models and indices are generated from Phase 1, you can run the evidence pipeline on single cases or batches. The missing evidence recommendations are seamlessly integrated into the unified architecture.
-
-### Option A: Single Case Inference
-You can observe the outcome of missing evidence detection inside the unified pipeline for a specific case. This calls `models/missing_evidence/recommendation.py` under the hood.
-
-```bash
-python main_pipeline.py
-```
-*Output will print the "Missing Evidence", "Current Evidence", and "Similar Cases" to the console as part of the JSON output.*
-
-### Option B: Batch Corpus Processing
-To run the evidence analysis and evidence recommendations against the entire historical corpus (9,000+ cases):
+Runs the full unified pipeline on all 9,700+ cases to produce the corpus summary CSV with Φ-features.
 
 ```bash
 python batch_process.py
 ```
-Wait for the terminal progress bar to complete. 
-**Artifacts Generated:**
-- `data/processed/corpus_intelligence_summary.csv` (contains missing evidence counts and metrics per case).
+**Outputs:** `data/processed/corpus_intelligence_summary.csv`
+
+---
+
+## Phase 3: Dataset Extraction
+
+Extracts the clean ML dataset from the corpus summary. Filters to binary labels (Allowed/Dismissed), drops ambiguous cases.
+
+```bash
+python scripts/prepare_dataset.py
+```
+**Outputs:**
+- `data/dataset/final_phi_features.csv` (full dataset with labels)
+- `data/dataset/X_features.csv` (features only)
+- `data/dataset/y_labels.csv` (labels only)
+
+---
+
+## Phase 4: Model Training & Evaluation
+
+Trains XGBoost with 5-fold stratified cross-validation, produces confusion matrix, feature importance plot, and a JSON metrics report.
+
+```bash
+python models/judgment/train.py
+```
+**Outputs:**
+- `data/processed/judgment_model.joblib`
+- `outputs/plots/confusion_matrix.png`
+- `outputs/plots/feature_importance.png`
+- `outputs/training_metrics.json`
+
+---
+
+## Phase 5: Ablation Study (Research Validation)
+
+Tests the incremental lift of each Φ-vector block:
+- **A:** Context only → **B:** + Evidence → **C:** + Gap → **D:** + Conflict → **E:** Full Pipeline
+
+```bash
+python models/judgment/train_ablation.py
+```
+**Outputs:**
+- `outputs/ablation_results.json`
+- `outputs/plots/ablation_study.png`
+
+---
+
+## Phase 6: Single Case Inference
+
+Run the full trained pipeline on a single case:
+
+```bash
+python main_pipeline.py
+```
+
+---
+
+## Quick Reference: Execution Order
+
+```
+1. weak_case_detection.py     → Build weak-case index
+2. importance.py              → Rank evidence importance
+3. batch_process.py           → Generate corpus Φ-vectors
+4. scripts/prepare_dataset.py → Extract clean ML dataset
+5. models/judgment/train.py   → Train + Evaluate model
+6. train_ablation.py          → Run ablation study
+7. main_pipeline.py           → Live inference
+```

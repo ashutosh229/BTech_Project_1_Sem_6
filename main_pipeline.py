@@ -74,10 +74,16 @@ def run_pipeline(file_path):
     similar = retrieve_similar_cases(con)
 
     # 3. Reasoning Intelligence
-    missing = find_missing_evidence(con, similar)
     contradictions = detect_contradictions(con)
 
-    # 4. Final Inference Synthesis
+    # 4. Build Φ-vector (needed for counterfactual importance in step 3b)
+    feature_builder = LegalFeatureBuilder()
+    phi_dict = feature_builder.build_phi_dict(con, similar, [], contradictions)
+
+    # 3b. Missing Evidence (with Φ-vector for Level 3 counterfactual)
+    missing = find_missing_evidence(con, similar, phi_dict=phi_dict)
+
+    # 5. Final Inference Synthesis
     engine = UnifiedInferenceEngine()
     ai_judgment = engine.run_inference(con, similar, missing, contradictions)
 

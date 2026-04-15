@@ -68,47 +68,70 @@ This calculation surfaces anomalies (e.g., if Witness Testimony shows a 45% pres
 
 ## 4. Retrieval-Conditioned Missing Evidence Recommender (`recommendation.py`)
 
-Given a single case vector $\Phi_{target}$ and its FAISS neighborhood of similar retrieved cases $N$, the algorithm must determine what evidence $\Phi_{target}$ is critically lacking.
+Given a single case vector $\Phi_{target}$ and its FAISS neighborhood of similar retrieved cases $N$, the algorithm determines what evidence $\Phi_{target}$ is critically lacking.
 
 ### A. Neighborhood Mass Calculation
-It segments the retrieved neighborhood into two buckets based on their historical outcomes:
-- **Strong Neighborhood ($N_s$):** $\sum \text{similarity\_score}$ of successful neighbors.
-- **Weak Neighborhood ($N_w$):** $\sum \text{similarity\_score}$ of dismissed/weak neighbors.
+It segments the retrieved neighborhood into two buckets based on probabilistic outcomes:
+- **Strong Mass ($M_s$):** $\sum_i (1 - P_{weak}(i)) \cdot \text{sim}(i)$
+- **Weak Mass ($M_w$):** $\sum_i P_{weak}(i) \cdot \text{sim}(i)$
 
-### B. Dynamic Context Weights
-A custom log-based formulation is used to weight how heavily the recommender leans on local neighborhood statistics vs. global dataset heuristics.
-$$ \text{Multiplier} = 1.0 + \log(1.0 + \frac{N_{total}}{5}) $$
-If the current target case has very few retrieved neighbors, global heuristic weights act as a fallback smoothing factor.
+Where $\text{sim}(i) = 1 / (d_i + \epsilon)$ and $P_{weak}$ comes from the calibrated weak-case model.
 
-### C. Prevalence & Log-Odds Difference
-For a specific candidate evidence feature $f$ missing in $\Phi_{target}$:
-1. **Strong Prevalence ($Prev_s$):** % of $N_s$ cases possessing $f$.
-2. **Weak Prevalence ($Prev_w$):** % of $N_w$ cases possessing $f$.
-3. **Log-Odds Shift:** 
-   $$ L\_Odds = \log\left(\frac{Prev_s + 0.05}{Prev_w + 0.05}\right) $$
-   (A constant $0.05$ is added to prevent division by zero/math domain errors).
+### B. Five-Signal Scoring (Level 2)
+For each candidate evidence feature $f$ missing in $\Phi_{target}$:
 
-### D. Final Recommendation Confidence Score
-For every candidate feature not found in the current case, the algorithm calculates a raw score:
-$$ Score_{raw} = \left(Prev_s \cdot 3.5\right) + \left(L\_Odds \cdot 1.5\right) + \left(\text{Global\_Importance}_f \cdot 0.8\right) $$
-This raw score is run through a Sigmoid activation function to bound it beautifully between $0$ and $1$, representing the `% Confidence` that the user *should* procure this evidence:
-$$ Confidence = \frac{1}{1 + e^{-Score_{raw}}} $$
+1. **Prevalence Signal:** $prev_s(f) - prev_w(f)$, the outcome-conditioned presence difference.
+2. **Intensity Signal:** Sigmoid of similarity-weighted count difference between strong/weak neighbors.
+3. **Log-Odds Signal:** Smoothed Bayesian log-odds with Laplace prior alpha=1.
+4. **Effect Size:** Cohen's d-like standardized difference of intensity means.
+5. **Global Importance:** From the ensemble causal ranking model (Section 2).
+
+### C. Dynamic Context Weights
+Weights adapt to query sparsity and retrieval reliability. All 5 weights are L1-normalized.
+
+### D. Final Recommendation Score
+$$ Score(f) = \sum_{k} w_k \cdot signal_k(f) $$
+
+A feature is recommended only if at least one local signal is positive.
 
 ---
 
 ## 5. Statistical Judgment Predictor (`models/judgment/predict.py`)
 
-A non-parametric fallback algorithm utilizing pure **Inverse Distance Weighting (IDW)** inside the Semantic Vector Space.
-For $k$ similar retrieved documents, each having a known outcome $O_i$ (Allowed/Dismissed) and distance $d_i$:
-$$ W_i = \frac{1}{d_i + \epsilon} $$
-Where $\epsilon = 1e-6$ to prevent zero-division. 
-The probabilities are calculated as:
-$$ P(\text{Allowed}) = \frac{\sum_{i \in \text{Allowed}} W_i}{\sum W_{total}} $$
+A non-parametric fallback using **Inverse Distance Weighting (IDW)**. Unknown outcomes are **excluded** from the weighted vote to prevent bias:
+$$ P(Allowed) = \frac{\sum_{i \in Allowed} W_i}{\sum_{i \in Known} W_i} $$
 
 ---
 
-## 6. XGBoost / Deep Learning Unified Output (`main_pipeline.py`)
+## 6. XGBoost Unified Output (`main_pipeline.py`)
 
-When the ML model is initialized (`judgment_model.joblib`), the RAG stats, Multi-Hot evidence bit-vectors, calculated contradiction severity score (between `0.0 - 1.0`), and contextual heuristics (Claim types) are flattened into the **Phi-Vector** $\Phi_{1...N}$.
+The Phi-Vector is fed to the trained XGBoost ensemble:
 $$ \hat{Y} = M_{xgb}(\Phi_{target}) $$
-Where $M_{xgb}$ is the trained tree-ensemble optimizing for Log-Loss. The function `predict_proba(X)` emits the true final AI Judgment Probability.
+Where $M_{xgb}$ optimizes Log-Loss. `predict_proba(X)` emits the final judgment probability.
+
+---
+
+## 7. Counterfactual Evidence Importance (`counterfactual.py`)
+
+**Level 3** importance. Given trained model $M$ and case Phi-vector:
+
+$$ importance(e) = P(win | \Phi_{e=1}) - P(win | \Phi_{e=0}) $$
+
+This directly answers: "If this evidence were present, how much would the prediction change?" The delta is injected into the recommendation engine as an additional ranking factor.
+
+---
+
+## 8. Ablation Study (`train_ablation.py`)
+
+Validates incremental contribution of each Phi-vector block via 5-fold stratified CV:
+
+| Step | Feature Block Added |
+|------|-------------------|
+| A | Context (case type, parties, claims, issues) |
+| B | + Evidence (coarse/fine-grained indicators) |
+| C | + Gap (missing evidence signals) |
+| D | + Conflict (contradiction count/score) |
+| E | + RAG (retrieval ratios, similarity stats) |
+
+Reports Accuracy, F1, AUC-ROC with incremental lift per step.
+

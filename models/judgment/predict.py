@@ -32,24 +32,41 @@ class StatisticalPredictor:
         weighted_allowed = 0.0
         weighted_dismissed = 0.0
         weighted_partial = 0.0
+        weighted_unknown = 0.0
         for outcome, weight in zip(outcomes, weights):
             if outcome == "Allowed/Success":
                 weighted_allowed += weight
             elif outcome == "Dismissed/Weak":
                 weighted_dismissed += weight
-            else:
+            elif outcome == "Partial/Mixed":
                 weighted_partial += weight
+            else:
+                weighted_unknown += weight
+
+        # Only consider known-outcome votes for prediction
+        known_weight = weighted_allowed + weighted_dismissed + weighted_partial
+        if known_weight < 1e-9:
+            return {
+                "prediction": "Inconclusive",
+                "confidence": "0.0%",
+                "stats": {
+                    "allowed_percent": f"{allowed_prob:.1f}%",
+                    "dismissed_percent": f"{dismissed_prob:.1f}%",
+                    "partial_percent": f"{partial_prob:.1f}%",
+                    "unknown_percent": f"{(unknown_count / total) * 100:.1f}%",
+                }
+            }
 
         # Decide final prediction
         if weighted_allowed > weighted_dismissed and weighted_allowed > weighted_partial:
             final = "Allowed/Success likely"
-            confidence = (weighted_allowed / total_weight) * 100
+            confidence = (weighted_allowed / known_weight) * 100
         elif weighted_dismissed > weighted_allowed and weighted_dismissed > weighted_partial:
             final = "Dismissed/Weak likely"
-            confidence = (weighted_dismissed / total_weight) * 100
+            confidence = (weighted_dismissed / known_weight) * 100
         elif weighted_partial > 0:
             final = "Partial/Mixed likely"
-            confidence = (weighted_partial / total_weight) * 100
+            confidence = (weighted_partial / known_weight) * 100
         else:
             final = "Equally likely outcome"
             confidence = 50.0

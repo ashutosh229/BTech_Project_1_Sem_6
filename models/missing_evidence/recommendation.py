@@ -40,6 +40,7 @@ class EvidenceRecommender:
     - probabilistic weak/strong neighborhood modeling
     - prevalence + intensity + log-odds + effect-size signals
     - dynamic query-conditioned weighting instead of static alpha/beta
+    - Level 3: counterfactual importance from trained judgment model
     """
 
     def __init__(
@@ -52,6 +53,13 @@ class EvidenceRecommender:
         self.lookup, self.label_lookup, self.binary_feature_columns = self._load_evidence_lookup(evidence_matrix_path)
         self.weak_scores = self._load_weak_scores(weak_case_scores_path, weak_case_index_path)
         self.global_importance = self._load_global_importance(ranking_path)
+
+        # Level 3: Load counterfactual importance engine (graceful fallback)
+        try:
+            from models.missing_evidence.counterfactual import CounterfactualImportance
+            self._cf_engine = CounterfactualImportance()
+        except Exception:
+            self._cf_engine = None
 
     def _normalize_case_id(self, case_id):
         if not case_id:
@@ -205,7 +213,7 @@ class EvidenceRecommender:
             f". Final dynamic score={score:.2f}.{case_phrase}"
         )
 
-    def recommend(self, con_dict, similar_cases):
+    def recommend(self, con_dict, similar_cases, phi_dict=None):
         if not similar_cases:
             return []
 
@@ -348,23 +356,36 @@ class EvidenceRecommender:
                     "support_count": len(support_cases[feature_key]),
                     "dynamic_weights": {k: round(v, 4) for k, v in weights.items()},
                     **stats,
+                    "counterfactual_delta": 0.0,
+                    "counterfactual_lift": "N/A",
                     "reason": reason,
                     "supporting_cases": support_cases[feature_key][:5],
                 }
             )
 
+        # Level 3: Enrich with counterfactual importance from trained model
+        cf_input = phi_dict if phi_dict else con_dict
+        if self._cf_engine and self._cf_engine.available and recommendations:
+            missing_keys = [r["feature_key"] for r in recommendations]
+            cf_results = self._cf_engine.compute(cf_input, missing_keys)
+            for rec in recommendations:
+                cf = cf_results.get(rec["feature_key"])
+                if cf:
+                    rec["counterfactual_delta"] = cf["delta"]
+                    rec["counterfactual_lift"] = f"{cf['lift_percent']:+.1f}%"
+
         recommendations.sort(
             key=lambda row: (
                 float(row["confidence_score"].rstrip("%")),
+                abs(row.get("counterfactual_delta", 0.0)),
                 row["support_count"],
                 row["weighted_strong_rate"],
-                row["strong_intensity"],
             ),
             reverse=True,
         )
         return recommendations
 
 
-def find_missing_evidence(con_dict, similar_cases):
+def find_missing_evidence(con_dict, similar_cases, phi_dict=None):
     recommender = EvidenceRecommender()
-    return recommender.recommend(con_dict, similar_cases)
+    return recommender.recommend(con_dict, similar_cases, phi_dict=phi_dict)

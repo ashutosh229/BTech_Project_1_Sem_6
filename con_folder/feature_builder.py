@@ -73,9 +73,9 @@ class LegalFeatureBuilder:
             "is_property": int("property" in case_type or "land" in case_type),
             "is_matrimonial": int("matrimonial" in case_type or "divorce" in case_type),
             "num_claims": len(con_dict.get("claims", []) or []),
-            "num_issues": len(con_dict.get("issues", []) or []),
-            "num_parties": len(con_dict.get("parties", []) or []),
-            "num_actions": len(con_dict.get("administrative_actions", []) or []),
+            "num_issues": con_dict.get("issues_count", 0),
+            "num_parties": con_dict.get("parties_count", 0),
+            "num_actions": con_dict.get("administrative_actions_count", 0),
         }
 
     def _evidence_features(self, con_dict):
@@ -180,7 +180,7 @@ class LegalFeatureBuilder:
             "rag_unknown_ratio": unknown / total,
             "rag_weighted_outcome": weighted_outcome_sum / total_sim,
             "rag_similarity_mean": float(np.mean(sims)),
-            "rag_similarity_min": float(np.max(sims)),
+            "rag_similarity_min": float(np.min(sims)),
         }
 
     def build_phi_dict(self, con_dict, similar_cases, missing_evidence, contradictions):
