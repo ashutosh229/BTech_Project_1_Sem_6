@@ -176,6 +176,11 @@ class LegalSearcher:
         self.case_ids = []
         self.case_outcomes = {}
 
+        # New: Support for Importance-Weighted Reranking
+        self.corpus_phi = {}
+        self.weights = {}
+        self._load_reranking_data()
+
         if os.path.exists(index_path):
             self.index = faiss.read_index(index_path)
             print(f"📦 Loaded FAISS index from {index_path}")
@@ -192,49 +197,54 @@ class LegalSearcher:
 
         self.case_outcomes = self._load_or_build_outcomes(outcome_cache_path)
 
-    def _encode_query(self, text):
-        with torch.no_grad():
-            inputs = self.tokenizer(
-                [text],
-                padding=True,
-                truncation=True,
-                max_length=512,
-                return_tensors="pt",
-            )
-            outputs = self.model(**inputs)
-            token_embeddings = outputs.last_hidden_state
-            attention_mask = inputs["attention_mask"].unsqueeze(-1)
-            masked_embeddings = token_embeddings * attention_mask
-            pooled = masked_embeddings.sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
-            return pooled.cpu().numpy().astype(np.float32)
+    def _load_reranking_data(self):
+        # 1. Load Feature Importances (Gains)
+        weights_path = os.path.join(BASE_DIR, "outputs", "feature_importances.json")
+        if os.path.exists(weights_path):
+            with open(weights_path, "r") as f:
+                self.weights = json.load(f)
+        
+        # 2. Load Corpus PHI Vectors
+        phi_path = os.path.join(DATA_DIR, "processed", "corpus_intelligence_summary.csv")
+        if os.path.exists(phi_path):
+            import pandas as pd
+            df = pd.read_csv(phi_path)
+            # Map case_id -> phi_dict
+            features = list(self.weights.keys()) if self.weights else []
+            if not features:
+                # Fallback if no weights found yet
+                features = [c for c in df.columns if c not in ["case_id", "true_outcome", "case_type"]]
+            
+            for _, row in df.iterrows():
+                cid = str(row["case_id"])
+                # Store only the features we weights for efficiency
+                self.corpus_phi[cid] = row[features].to_dict()
 
-    def _load_or_build_outcomes(self, outcome_cache_path):
-        if os.path.exists(outcome_cache_path):
-            with open(outcome_cache_path, "r", encoding="utf-8") as f:
-                cached = json.load(f)
-            if isinstance(cached, dict) and "version" in cached and "outcomes" in cached:
-                if cached["version"] == OUTCOME_CACHE_VERSION:
-                    return cached["outcomes"]
+    def _calculate_legal_alignment(self, query_phi, target_phi):
+        """
+        Computes weighted Φ-overlap between two cases.
+        """
+        if not self.weights: return 0.5
+        
+        score = 0.0
+        total_weight = 0.0
+        for feat, weight in self.weights.items():
+            if weight <= 0: continue
+            q_val = query_phi.get(feat, 0.0)
+            t_val = target_phi.get(feat, 0.0)
+            
+            # Simple match for binary features; abs diff for continuous
+            if feat.startswith(("ev_", "fg_", "is_")):
+                match = 1.0 if (q_val > 0.5) == (t_val > 0.5) else 0.0
+            else:
+                match = 1.0 - min(abs(q_val - t_val), 1.0)
+            
+            score += match * weight
+            total_weight += weight
+            
+        return score / total_weight if total_weight > 0 else 0.5
 
-        outcomes = {}
-        for case_id in self.case_ids:
-            json_path = Path(DATA_DIR) / f"{case_id}.json"
-            if not json_path.exists():
-                outcomes[case_id] = "Unknown"
-                continue
-            try:
-                data = _load_json(json_path)
-                outcomes[case_id] = extract_case_outcome(data)
-            except Exception:
-                outcomes[case_id] = "Unknown"
-
-        os.makedirs(PROCESSED_DIR, exist_ok=True)
-        with open(outcome_cache_path, "w", encoding="utf-8") as f:
-            json.dump({"version": OUTCOME_CACHE_VERSION, "outcomes": outcomes}, f, indent=2)
-
-        return outcomes
-
-    def retrieve_similar_cases(self, con_dict, k=5):
+    def retrieve_similar_cases(self, con_dict, k=5, strategy="balanced"):
         if not self.index:
             return []
 
@@ -242,11 +252,19 @@ class LegalSearcher:
         if not query_text:
             return []
 
+        # 1. Broad Vector Search (Expand candidates to allow for filtering/diversification)
         query_vector = self._encode_query(query_text)
-        distances, indices = self.index.search(query_vector, k)
+        candidates_k = k * 10
+        distances, indices = self.index.search(query_vector, candidates_k)
+
+        # 2. Extract Query Φ for Alignment
+        from con.feature_builder import LegalFeatureBuilder
+        builder = LegalFeatureBuilder()
+        query_phi = builder.build_phi_dict(con_dict, [], [], {})
 
         results = []
         query_case_id = str(con_dict.get("case_id", "")).replace(".json", "")
+        
         for rank, idx in enumerate(indices[0]):
             if idx < 0 or idx >= len(self.case_ids):
                 continue
@@ -255,14 +273,56 @@ class LegalSearcher:
             if case_id == query_case_id:
                 continue
 
+            d = float(distances[0][rank])
+            vec_sim = 1.0 / (1.0 + d)
+
+            target_phi = self.corpus_phi.get(case_id, {})
+            legal_sim = self._calculate_legal_alignment(query_phi, target_phi) if target_phi else 0.5
+            outcome = self.case_outcomes.get(case_id, "Unknown")
+
+            # --- Diversification Logic ---
+            # Strategy: "balanced" (Current), "fact-similar", "evidence-similar", "outcome-diverse"
+            diversity_multiplier = 1.0
+            if strategy == "fact-similar":
+                diversity_multiplier = 1.5 if vec_sim > 0.7 else 1.0
+            elif strategy == "evidence-similar":
+                diversity_multiplier = 1.5 if legal_sim > 0.7 else 1.0
+            elif strategy == "outcome-diverse":
+                # Prioritize cases with a DIFFERENT outcome than the predicted/likely one
+                # Since we don't have prediction here, we can't strictly diversify by outcome
+                # unless we pass a 'target_outcome'. Let's just ensure we have a mix.
+                pass
+
+            final_sim = ((0.4 * vec_sim) + (0.6 * legal_sim)) * diversity_multiplier
+
             results.append({
                 "case_id": case_id,
-                "distance": float(distances[0][rank]),
-                "outcome": self.case_outcomes.get(case_id, "Unknown"),
+                "distance": d,
+                "vector_similarity": vec_sim,
+                "legal_alignment": legal_sim,
+                "final_score": final_sim,
+                "outcome": outcome,
             })
-        return results
+
+        results = sorted(results, key=lambda x: x["final_score"], reverse=True)
+
+        # Final step: If strategy is 'balanced', ensure we have a mix of outcomes if possible
+        if strategy == "balanced":
+            balanced_results = []
+            outcomes_seen = set()
+            for res in results:
+                if res["outcome"] not in outcomes_seen or len(balanced_results) < k // 2:
+                    balanced_results.append(res)
+                    outcomes_seen.add(res["outcome"])
+                if len(balanced_results) == k:
+                    break
+            if len(balanced_results) > 0:
+                return balanced_results
+
+        return results[:k]
 
 
-def retrieve_similar_cases(con_dict, k=5):
+
+def retrieve_similar_cases(con_dict, k=5, strategy="balanced"):
     searcher = LegalSearcher()
-    return searcher.retrieve_similar_cases(con_dict, k)
+    return searcher.retrieve_similar_cases(con_dict, k, strategy)

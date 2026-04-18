@@ -2,18 +2,18 @@
 import Navbar from "@/components/Navbar";
 
 const evalMetrics = [
-  { name: "Accuracy", value: "92.3%", bar: 92.3, color: "var(--accent-green)" },
-  { name: "F1 Score", value: "0.914", bar: 91.4, color: "var(--accent-blue)" },
-  { name: "Precision", value: "92.3%", bar: 92.3, color: "var(--accent-amber)" },
-  { name: "Recall", value: "91.6%", bar: 91.6, color: "var(--accent-orange)" },
-  { name: "AUC-ROC", value: "0.961", bar: 96.1, color: "var(--accent-blue-glow)" },
+  { name: "CV Accuracy", value: "56.5%", bar: 56.5, color: "var(--accent-green)" },
+  { name: "F1 Score", value: "0.546", bar: 54.6, color: "var(--accent-blue)" },
+  { name: "Precision", value: "0.545", bar: 54.5, color: "var(--accent-amber)" },
+  { name: "Recall", value: "0.548", bar: 54.8, color: "var(--accent-orange)" },
+  { name: "AUC-ROC", value: "0.601", bar: 60.1, color: "var(--accent-blue-glow)" },
 ];
 
 const confusionMatrix = [
-  { label: "True Neg", value: 991, row: "Dismissed", col: "Dismissed", color: "var(--accent-green)", opacity: 0.85 },
-  { label: "False Pos", value: 74, row: "Dismissed", col: "Allowed", color: "var(--accent-red)", opacity: 0.3 },
-  { label: "False Neg", value: 82, row: "Allowed", col: "Dismissed", color: "var(--accent-red)", opacity: 0.35 },
-  { label: "True Pos", value: 891, row: "Allowed", col: "Allowed", color: "var(--accent-green)", opacity: 0.8 },
+  { label: "True Neg", value: 127, row: "Dismissed", col: "Dismissed", color: "var(--accent-green)", opacity: 0.85 },
+  { label: "False Pos", value: 86, row: "Dismissed", col: "Allowed", color: "var(--accent-red)", opacity: 0.3 },
+  { label: "False Neg", value: 105, row: "Allowed", col: "Dismissed", color: "var(--accent-red)", opacity: 0.35 },
+  { label: "True Pos", value: 90, row: "Allowed", col: "Allowed", color: "var(--accent-green)", opacity: 0.8 },
 ];
 
 const topFeatures = [

@@ -18,12 +18,14 @@ const evidenceCoverage = [
   { type: "Procedural", criminal: 45, service: 58, property: 34, civil: 41 },
 ];
 
+// Unused constants removed
+
 const pipelineSteps = [
-  { name: "Raw JSON", icon: "📄", time: "2ms" },
   { name: "CON Builder", icon: "🏗️", time: "15ms" },
-  { name: "FAISS Retrieval", icon: "🔍", time: "45ms" },
-  { name: "Evidence Analysis", icon: "🧬", time: "28ms" },
-  { name: "Contradiction", icon: "⚡", time: "8ms" },
+  { name: "Weighted FAISS", icon: "🔍", time: "45ms" },
+  { name: "KG Grounding", icon: "🔱", time: "22ms" },
+  { name: "Counterfactual", icon: "🎲", time: "31ms" },
+  { name: "Discriminative", icon: "⚖️", time: "12ms" },
   { name: "XGBoost", icon: "🧠", time: "3ms" },
 ];
 
