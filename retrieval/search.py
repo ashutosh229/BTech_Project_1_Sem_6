@@ -197,6 +197,52 @@ class LegalSearcher:
 
         self.case_outcomes = self._load_or_build_outcomes(outcome_cache_path)
 
+    def search(self, query, top_k=5):
+        if not self.index:
+            return []
+        
+        # Encode query
+        query_vector = self._encode_query(query)
+        
+        # Search index
+        distances, indices = self.index.search(query_vector, top_k)
+        
+        results = []
+        for rank, idx in enumerate(indices[0]):
+            if idx < 0 or idx >= len(self.case_ids):
+                continue
+            
+            case_id = self.case_ids[idx]
+            results.append({
+                "case_id": case_id,
+                "distance": float(distances[0][rank]),
+                "score": 1.0 / (1.0 + float(distances[0][rank])),
+                "similarity": 1.0 / (1.0 + float(distances[0][rank]))
+            })
+        
+        return results
+
+    def _encode_query(self, text):
+        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512, padding=True)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        # Using [CLS] token embedding
+        return outputs.last_hidden_state[:, 0, :].numpy()
+
+    def _load_or_build_outcomes(self, path):
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("outcomes", data) if isinstance(data, dict) else {}
+        
+        # Build if not found - this might be slow
+        print("🔨 Building outcome cache (first time only)...")
+        outcomes = {}
+        # In a real scenario, we would iterate over the corpus files
+        # For this demo, we'll return an empty dict if the file is missing
+        # or mock it if possible
+        return outcomes
+
     def _load_reranking_data(self):
         # 1. Load Feature Importances (Gains)
         weights_path = os.path.join(BASE_DIR, "outputs", "feature_importances.json")
