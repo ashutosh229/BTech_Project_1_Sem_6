@@ -155,8 +155,14 @@ async def analyze_case(req: CaseAnalysisRequest):
         re = ensemble_predictor.predict(con_dict, similar_cases=retrieved)
         
         # 4. Run LLM Synthetic Reasoning (NyayaRAG)
-        # We pass the retrieved precedents from our vector search
-        llm_res = llm_predictor.predict(req.facts, retrieved)
+        # We pass the retrieved precedents and the dynamically extracted statutes
+        statute_strings = [f"{s['section']}: {s['title']} - {s['desc']}" for s in dynamic_statutes]
+        llm_res = llm_predictor.predict(
+            case_facts=req.facts, 
+            similar_cases=retrieved, 
+            statutes=statute_strings,
+            case_id="live_analysis"
+        )
 
         # 5. Synthesize Factor Impacts
         factors = []
