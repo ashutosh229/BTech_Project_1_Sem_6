@@ -213,16 +213,16 @@ export default function AnalyzePage() {
 
         {step === "input" && (
           <div className="animate-in">
-            <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <h1 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>
+            <div style={{ textAlign: "center", marginBottom: 36 }}>
+              <h1 className="font-outfit text-cyan-gradient" style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 12 }}>
                 Analyze Your Case
               </h1>
-              <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
+              <p style={{ color: "var(--text-secondary)", fontSize: 16 }}>
                 Provide details for AI-powered outcome and gap analysis.
               </p>
             </div>
 
-            <div className="glass-card" style={{ padding: 36, maxWidth: 900, margin: "0 auto" }}>
+            <div className="neo-card animate-delay-1" style={{ padding: 40, maxWidth: 900, margin: "0 auto" }}>
               {/* Form implementation remains the same but with premium feel */}
               <div style={{ marginBottom: 24 }}>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -266,8 +266,8 @@ export default function AnalyzePage() {
                 </div>
               </div>
 
-              <button onClick={handleAnalyze} disabled={loading || !caseType || !facts.trim()} className="btn-primary" style={{ width: "100%", padding: "16px", fontSize: 16, borderRadius: 14, opacity: (!caseType || !facts.trim()) ? 0.5 : 1 }}>
-                {loading ? "⏳ Running Intellectual Inference..." : "⚖️ Analyze Case Strength"}
+              <button onClick={handleAnalyze} disabled={loading || !caseType || !facts.trim()} className="glow-button" style={{ width: "100%", padding: "18px", borderRadius: 14, opacity: (!caseType || !facts.trim()) ? 0.5 : 1 }}>
+                <span>{loading ? "⏳ Running Neural Inference..." : "⚖️ Analyze Case Strength"}</span>
               </button>
             </div>
           </div>
@@ -275,43 +275,43 @@ export default function AnalyzePage() {
 
         {step === "results" && result && (
           <div className="animate-in">
-            <button onClick={handleReset} style={{ background: "none", border: "none", color: "var(--accent-blue-light)", fontSize: 14, cursor: "pointer", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>← New Analysis</button>
+            <button onClick={handleReset} className="btn-secondary" style={{ marginBottom: 24, display: "inline-flex", alignItems: "center", gap: 8 }}>← New Analysis</button>
 
             {/* AI Reasoning Hero */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: 24, marginBottom: 24 }}>
               {/* Left Column (Score + Statutes) */}
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                <div className="glass-card" style={{ padding: 32, textAlign: "center", background: result.confidence > 50 ? "rgba(52,211,153,0.03)" : "rgba(248,113,113,0.03)" }}>
+                <div className="neo-card" style={{ padding: 32, textAlign: "center", background: result.confidence > 50 ? "rgba(16, 185, 129, 0.05)" : "rgba(239, 68, 68, 0.05)" }}>
                   <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16 }}>Case Strength Index</div>
                   <div style={{ position: "relative", width: 180, height: 180, margin: "0 auto 20px" }}>
                     <svg width="180" height="180" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="45" fill="none" stroke="var(--bg-card-high)" strokeWidth="8" />
-                      <circle cx="50" cy="50" r="45" fill="none" stroke={result.confidence > 50 ? "var(--accent-green)" : "var(--accent-red)"} strokeWidth="8" strokeDasharray={`${result.confidence * 2.83} 283`} strokeLinecap="round" transform="rotate(-90 50 50)" />
+                      <circle cx="50" cy="50" r="45" fill="none" stroke={result.confidence > 50 ? "var(--accent-emerald)" : "var(--accent-red)"} strokeWidth="8" strokeDasharray={`${result.confidence * 2.83} 283`} strokeLinecap="round" transform="rotate(-90 50 50)" />
                     </svg>
                     <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-                      <div style={{ fontSize: 42, fontWeight: 800, fontFamily: "'Manrope', sans-serif" }}>{result.confidence}%</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>CONFIDENCE</div>
+                      <div className="font-outfit" style={{ fontSize: 48, fontWeight: 800 }}>{result.confidence}%</div>
+                      <div className="font-mono" style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, letterSpacing: "0.1em" }}>CONFIDENCE</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: result.confidence > 50 ? "var(--accent-green)" : "var(--accent-red)", marginBottom: 12 }}>{result.prediction}</div>
+                  <div className="font-outfit" style={{ fontSize: 24, fontWeight: 800, color: result.confidence > 50 ? "var(--accent-emerald-glow)" : "var(--accent-red)", marginBottom: 16 }}>{result.prediction}</div>
                   <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
                     <span className="badge badge-gray">Corpus: 9,675</span>
                     <span className="badge badge-gray">Φ-51 Φ-Matrix</span>
                   </div>
 
                   {/* Research Intelligence Bar */}
-                  <div style={{ background: "var(--bg-workspace)", padding: "16px", borderRadius: 12, border: "1px solid var(--border-ghost)", textAlign: "left" }}>
-                    <div style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 800, textTransform: "uppercase", marginBottom: 10, letterSpacing: "0.05em" }}>Reasoning Layers</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div className="neo-card" style={{ padding: 24 }}>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16, borderBottom: "1px solid var(--border-ghost)", paddingBottom: 12 }}>Research Layer</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 11, fontWeight: 700 }}>Alignment:</span>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: result.alignment.consistency === "High" ? "var(--accent-green)" : "var(--accent-amber)" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>Alignment:</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: result.alignment.consistency === "High" ? "var(--accent-emerald)" : "var(--accent-amber)" }}>
                           {result.alignment.consistency} ({Math.round(result.alignment.score * 100)}%)
                         </span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 11, fontWeight: 700 }}>KG Signal:</span>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: result.symbolic.signal === "Positive" ? "var(--accent-green)" : "var(--text-muted)" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>KG Signal:</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: result.symbolic.signal === "Positive" ? "var(--accent-cyan)" : "var(--text-muted)" }}>
                           {result.symbolic.signal} (+{result.symbolic.detected})
                         </span>
                       </div>
@@ -320,16 +320,16 @@ export default function AnalyzePage() {
                 </div>
 
                 {/* Statutory Grounding Section */}
-                <div className="glass-card" style={{ padding: 24, borderLeft: "4px solid var(--accent-amber)" }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-amber)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="neo-card" style={{ padding: 24, borderLeft: "4px solid var(--accent-violet)" }}>
+                  <h3 className="font-outfit" style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
                     📜 Statutory Framework
                   </h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {result.relevantStatutes.map((s, i) => (
                       <div key={i} style={{ borderBottom: i === result.relevantStatutes.length - 1 ? "none" : "1px solid var(--border-ghost)", paddingBottom: 10 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text-primary)" }}>{s.section}</span>
-                          <span className="badge badge-gray" style={{ fontSize: 9 }}>{s.impact}</span>
+                          <span className="font-outfit" style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-violet-glow)" }}>{s.section || s.name}</span>
+                          <span className="badge badge-gray">{s.impact || s.relevance}</span>
                         </div>
                         <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.4 }}>{s.desc}</div>
                       </div>
@@ -339,16 +339,16 @@ export default function AnalyzePage() {
               </div>
 
               {/* Right Column: Factor Impact Analysis */}
-              <div className="glass-card" style={{ padding: 32 }}>
-                <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 20 }}>🧠 Factor Impact Analysis</h2>
+              <div className="neo-card" style={{ padding: 32 }}>
+                <h2 className="font-outfit text-cyan-gradient" style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>🧠 Factor Impact Analysis</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {result.factors.map((f, i) => (
                     <div key={i} style={{ display: "flex", gap: 16, alignItems: "start" }}>
                       <div style={{
                         width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                        background: f.type === "positive" ? "rgba(52,211,153,0.12)" : "rgba(248,113,113,0.12)",
-                        color: f.type === "positive" ? "var(--accent-green)" : "var(--accent-red)",
-                        fontSize: 16, fontWeight: 800, flexShrink: 0
+                        background: f.type === "positive" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+                        color: f.type === "positive" ? "var(--accent-emerald)" : "var(--accent-red)",
+                        fontSize: 16, fontWeight: 800, flexShrink: 0, border: f.type === "positive" ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(239,68,68,0.2)"
                       }}>
                         {f.impact > 0 ? `+${f.impact}` : f.impact}
                       </div>
@@ -367,36 +367,36 @@ export default function AnalyzePage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: 24, marginBottom: 24 }}>
               
               {/* Case Optimization Advice */}
-              <div className="glass-card" style={{ padding: 28, background: "linear-gradient(135deg, rgba(59,130,246,0.06), transparent)" }}>
-                <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 17, fontWeight: 700, marginBottom: 16, color: "var(--accent-blue-light)" }}>🚀 How to Improve Odds</h2>
+              <div className="neo-card" style={{ padding: 28, background: "linear-gradient(135deg, rgba(6,182,212,0.05), transparent)" }}>
+                <h2 className="font-outfit" style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: "var(--accent-cyan-glow)" }}>🚀 How to Improve Odds</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {result.advice.map((adv, i) => (
-                    <div key={i} style={{ display: "flex", gap: 10, background: "var(--bg-workspace)", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border-ghost)" }}>
-                      <span style={{ color: "var(--accent-blue)" }}>⬥</span>
-                      <span style={{ fontSize: 13, color: "var(--text-primary)", lineHeight: 1.4 }}>{adv}</span>
+                    <div key={i} style={{ display: "flex", gap: 10, background: "rgba(15,23,42,0.5)", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border-ghost)" }}>
+                      <span style={{ color: "var(--accent-cyan)" }}>⬥</span>
+                      <span style={{ fontSize: 13, color: "var(--text-primary)", lineHeight: 1.5 }}>{adv}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Counterfactual Lift Analysis */}
-              <div className="glass-card" style={{ padding: 28 }}>
-                <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 17, fontWeight: 700, marginBottom: 4 }}>📋 Evidence Gap Sensitivity</h2>
+              <div className="neo-card" style={{ padding: 28 }}>
+                <h2 className="font-outfit" style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>📋 Evidence Gap Sensitivity</h2>
                 <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>Projected success lift if the following documents are added</p>
                 
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {result.missingEvidence.length > 0 ? (
                     result.missingEvidence.slice(0, 3).map((e, i) => (
                       <div key={i} style={{
-                        background: "var(--bg-card)", borderRadius: 10, padding: "12px 16px", border: "1px solid var(--border-ghost)",
-                        borderRight: `4px solid ${i === 0 ? "var(--accent-green)" : "var(--accent-blue)"}`
+                        background: "rgba(15,23,42,0.4)", borderRadius: 10, padding: "12px 16px", border: "1px solid var(--border-ghost)",
+                        borderRight: `4px solid ${i === 0 ? "var(--accent-emerald)" : "var(--accent-cyan)"}`
                       }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700 }}>{e.type}</span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-green)" }}>{e.lift} Lift</span>
+                          <span className="font-outfit" style={{ fontSize: 14, fontWeight: 700 }}>{e.type}</span>
+                          <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-emerald-glow)" }}>{e.lift} Lift</span>
                         </div>
-                        <div className="progress-bar" style={{ height: 4 }}>
-                          <div className="progress-fill" style={{ width: `${e.importance}%`, background: "var(--accent-blue)" }} />
+                        <div className="progress-bar">
+                          <div className="progress-fill" style={{ width: `${e.importance}%` }} />
                         </div>
                       </div>
                     ))
@@ -410,8 +410,8 @@ export default function AnalyzePage() {
             </div>
 
             {/* Similar Precedents Table */}
-            <div className="glass-card" style={{ padding: 28 }}>
-              <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 20 }}>🔍 Foundational Precedents</h2>
+            <div className="neo-card" style={{ padding: 28 }}>
+              <h2 className="font-outfit text-cyan-gradient" style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>🔍 Foundational Precedents</h2>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 12px" }}>
                   <thead>
@@ -423,11 +423,11 @@ export default function AnalyzePage() {
                   </thead>
                   <tbody>
                     {result.similarCases.map((c, i) => (
-                      <tr key={i} style={{ background: "var(--bg-workspace)", verticalAlign: "top" }}>
-                        <td style={{ padding: "16px", borderRadius: "10px 0 0 10px", maxWidth: 500 }}>
-                          <div style={{ color: "var(--accent-blue-light)", fontWeight: 700, fontSize: 13, marginBottom: 8, fontFamily: "monospace" }}>{c.id} ({c.year})</div>
-                          <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600, marginBottom: 4 }}>{c.summary}</div>
-                          <div style={{ fontSize: 12, color: "var(--text-muted)", fontStyle: "italic", borderLeft: "2px solid var(--border-ghost)", paddingLeft: 12 }}>
+                      <tr key={i} className="precedent-row" style={{ background: "rgba(15,23,42,0.3)", verticalAlign: "top" }}>
+                        <td style={{ padding: "16px", borderRadius: "10px 0 0 10px", maxWidth: 500, borderBottom: "1px solid var(--border-ghost)" }}>
+                          <div className="font-mono" style={{ color: "var(--accent-cyan)", fontWeight: 700, fontSize: 12, marginBottom: 8 }}>{c.id} ({c.year})</div>
+                          <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 600, marginBottom: 6 }}>{c.summary}</div>
+                          <div style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", borderLeft: "2px solid rgba(6,182,212,0.3)", paddingLeft: 12 }}>
                             <span style={{ color: "var(--accent-blue)", fontWeight: 700, marginRight: 6 }}>Ratio:</span>
                             {c.reasoning}
                           </div>
@@ -449,20 +449,16 @@ export default function AnalyzePage() {
             </div>
 
             {/* NyayaRAG Inspired: Draft Judicial Reasoning Section */}
-            <div className="glass-card animate-in animate-delay-4" style={{ padding: 40, marginTop: 24, borderTop: "4px solid var(--accent-blue)" }}>
+            <div className="neo-card animate-in animate-delay-4" style={{ padding: 40, marginTop: 24, borderTop: "4px solid var(--accent-cyan)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 24 }}>
                 <div>
-                  <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 20, fontWeight: 800, marginBottom: 8 }}>⚖️ Draft Judicial Reasoning</h2>
-                  <p style={{ fontSize: 13, color: "var(--text-muted)" }}>Synthesized rationale emulating High Court deliberation patterns</p>
+                  <h2 className="font-outfit text-cyan-gradient" style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>⚖️ Draft Judicial Reasoning</h2>
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>Synthesized rationale emulating High Court deliberation patterns</p>
                 </div>
                 <span className="badge badge-gray" style={{ padding: "8px 16px", borderRadius: 8 }}>LLaMA-3.1 8B Inference</span>
               </div>
 
-              <div style={{
-                background: "var(--bg-workspace)", padding: 32, borderRadius: 16,
-                border: "1px solid var(--border-ghost)", color: "var(--text-primary)",
-                lineHeight: 1.8, fontSize: 15, fontFamily: "serif", position: "relative"
-              }}>
+              <div className="judicial-box">
                 {/* Formal Opinion Content */}
                 <div style={{ marginBottom: 16 }}>
                   <strong>I. The Issue</strong><br/>
@@ -512,9 +508,9 @@ export default function AnalyzePage() {
 
             {/* Disclaimer */}
             <div style={{
-              textAlign: "center", padding: "24px 0", marginTop: 32,
+              textAlign: "center", padding: "24px 0", marginTop: 40,
               fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6,
-              borderTop: "1px solid var(--border-ghost)"
+              borderTop: "1px solid var(--border-ghost)", fontFamily: "'JetBrains Mono', monospace"
             }}>
               ⚖️ This analysis is for informational purposes only and does not constitute legal advice.
               Predictions are based on statistical patterns in 9,675 historical High Court cases.
