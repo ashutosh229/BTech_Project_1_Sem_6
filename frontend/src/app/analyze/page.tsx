@@ -115,7 +115,23 @@ function runMockAnalysis(formData: {
       },
     ],
     evidenceDensity: +(evCount / 6).toFixed(2),
-    advice: hasDelay ? ["Submit a detailed 'Delay Condonation Affidavit' to explain the gap."] : ["File supplementary affidavit for witness statements."],
+    advice: (() => {
+      const dynamicAdvice: string[] = [];
+      if (hasDelay) {
+        dynamicAdvice.push("Address the delay: Submit a 'Delay Condonation Affidavit' explaining the time gap to prevent limitation-based dismissal.");
+      }
+      if (missingRanked.length > 0) {
+        missingRanked.slice(0, 2).forEach(ev => {
+          dynamicAdvice.push(`Crucial evidence gap: Provide ${ev.type} to strengthen your claim. This is projected to give a ${ev.lift} confidence lift.`);
+        });
+      }
+      if (evCount < 2) {
+        dynamicAdvice.push(`Your evidence base (${evCount} documents) is thin. Cases with 3+ evidence types have significantly higher success rates.`);
+      } else if (dynamicAdvice.length === 0) {
+        dynamicAdvice.push("Your evidence profile aligns well with successful cases. Ensure all documents are properly authenticated and exhibited.");
+      }
+      return dynamicAdvice;
+    })(),
     alignment: {
       consistency: alignmentConsistency,
       score: alignmentScore,
@@ -147,15 +163,42 @@ export default function AnalyzePage() {
     setEvidence((prev) => prev.includes(key) ? prev.filter((e) => e !== key) : [...prev, key]);
   }
 
-  function handleAnalyze() {
+  async function handleAnalyze() {
     if (!caseType || !facts.trim()) return;
     setLoading(true);
-    setTimeout(() => {
-      const res = runMockAnalysis({ caseType, parties, facts, evidence, reliefs });
-      setResult(res);
+
+    try {
+      const response = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          case_type: caseType,
+          parties: parties,
+          facts: facts,
+          evidence: evidence,
+          reliefs: reliefs,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResult(data as AnalysisResult);
       setStep("results");
+    } catch (err) {
+      console.warn("Backend API failed, falling back to local ML mock...", err);
+      setTimeout(() => {
+        const res = runMockAnalysis({ caseType, parties, facts, evidence, reliefs });
+        setResult(res);
+        setStep("results");
+      }, 500);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   }
 
   function handleReset() {
@@ -342,20 +385,26 @@ export default function AnalyzePage() {
                 <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>Projected success lift if the following documents are added</p>
                 
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {result.missingEvidence.slice(0, 3).map((e, i) => (
-                    <div key={i} style={{
-                      background: "var(--bg-card)", borderRadius: 10, padding: "12px 16px", border: "1px solid var(--border-ghost)",
-                      borderRight: `4px solid ${i === 0 ? "var(--accent-green)" : "var(--accent-blue)"}`
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700 }}>{e.type}</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-green)" }}>{e.lift} Lift</span>
+                  {result.missingEvidence.length > 0 ? (
+                    result.missingEvidence.slice(0, 3).map((e, i) => (
+                      <div key={i} style={{
+                        background: "var(--bg-card)", borderRadius: 10, padding: "12px 16px", border: "1px solid var(--border-ghost)",
+                        borderRight: `4px solid ${i === 0 ? "var(--accent-green)" : "var(--accent-blue)"}`
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700 }}>{e.type}</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-green)" }}>{e.lift} Lift</span>
+                        </div>
+                        <div className="progress-bar" style={{ height: 4 }}>
+                          <div className="progress-fill" style={{ width: `${e.importance}%`, background: "var(--accent-blue)" }} />
+                        </div>
                       </div>
-                      <div className="progress-bar" style={{ height: 4 }}>
-                        <div className="progress-fill" style={{ width: `${e.importance}%`, background: "var(--accent-blue)" }} />
-                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: "16px", textAlign: "center", color: "var(--text-muted)", fontSize: 13, background: "var(--bg-workspace)", borderRadius: 10, border: "1px dashed var(--border-ghost)" }}>
+                      Your case features are highly saturated. No single missing document provides a statistically significant lift.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -415,26 +464,48 @@ export default function AnalyzePage() {
                 lineHeight: 1.8, fontSize: 15, fontFamily: "serif", position: "relative"
               }}>
                 {/* Formal Opinion Content */}
-                <div style={{ marginBottom: 20 }}>
-                  <strong>I. Factual Nexus:</strong> The applicant faces allegations under {result.relevantStatutes[0].section} and {result.relevantStatutes[1].section}. 
-                  The factual matrix suggests a complexity regarding the timeline of disclosure. 
-                  {result.alignment.consistency === "Conflict" ? 
-                    "While the aggregate Φ-analysis leans towards success, a notable reasoning tension exists with structural precedents, suggesting a risk of outlier dismissal." :
-                    "The factual alignment with successful historical clusters provides a robust foundation for the current prayers."}
+                <div style={{ marginBottom: 16 }}>
+                  <strong>I. The Issue</strong><br/>
+                  <span style={{ display: "inline-block", marginTop: 4 }}>The core question before this Court is whether the relief sought by the applicant, in light of the allegations under {result.relevantStatutes?.[0]?.section || "applicable statutes"}, satisfies the threshold for judicial intervention.</span>
                 </div>
 
-                <div style={{ marginBottom: 20 }}>
-                  <strong>II. Statutory & Symbolic Alignment:</strong> In light of {result.relevantStatutes[2].section}, the Court must weigh procedural regularity. 
-                  {result.symbolic.signal === "Positive" ? 
-                    `The detection of high-signal legal provisions (KG-Match: ${result.symbolic.score}) significantly strengthens the normative basis of the application.` :
-                    "The statutory framework provides standard procedural safeguards but lacks high-signal positive grounding at this stage."}
+                <div style={{ marginBottom: 16 }}>
+                  <strong>II. Evaluation of Evidence</strong><br/>
+                  <span style={{ display: "inline-block", marginTop: 4 }}>
+                    The Court has examined the material placed on record. 
+                    {result.evidenceDensity < 0.3 ? 
+                      " The evidentiary record is currently sparse, raising concerns regarding the substantiation of the claims." : 
+                      " The submitted documentation establishes a plausible factual foundation for the proceedings."}
+                    {result.primaryPivot?.feature && result.primaryPivot?.feature !== "None" ? 
+                      ` However, the absence of ${result.primaryPivot.feature} remains a critical evidentiary gap.` : 
+                      " No glaring evidentiary defects are immediately apparent on the face of the record."}
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong>III. Applicable Legal Principles</strong><br/>
+                  <span style={{ display: "inline-block", marginTop: 4 }}>
+                    It is a settled doctrinal standard that relief under {result.relevantStatutes?.[1]?.section || result.relevantStatutes?.[0]?.section || "the relevant provisions"} is discretionary and governed by procedural safeguards. As established in <em>{result.similarCases?.[0]?.id || "settled precedents"}</em>, the Court must ensure no material evidence is ignored and findings are not perverse.
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <strong>IV. Application to Present Facts</strong><br/>
+                  <span style={{ display: "inline-block", marginTop: 4 }}>
+                    Applying the aforementioned principles to the present factual matrix, 
+                    {result.confidence > 50 ? 
+                      " the alignment with historical jurisprudence suggests the claims are prima facie maintainable. The view taken by the applicant is plausible and supported by the record." : 
+                      " the current averments conflict with established thresholds. The statutory framework provides standard safeguards but lacks the necessary evidentiary grounding at this stage."}
+                  </span>
                 </div>
 
                 <div>
-                  <strong>III. Counterfactual Conclusion:</strong> Guided by the precedent set in <em>{result.similarCases[0].id}</em>, 
-                  this Court observes that the primary evidentiary pivot remains the acquisition of <strong>{result.primaryPivot.feature}</strong>, 
-                  which would provide a projected {result.primaryPivot.lift} confidence lift. 
-                  {result.confidence > 50 ? "Currently, there exist sufficient grounds for exercise of discretion." : "In its current form, the application lacks the necessary merits for discretionary relief."}
+                  <strong>V. Conclusion</strong><br/>
+                  <span style={{ display: "inline-block", marginTop: 4 }}>
+                    {result.confidence > 50 ? 
+                      "Therefore, sufficient grounds exist to entertain the application. The matter warrants further procedural consideration." : 
+                      "Consequently, no compelling grounds exist at this juncture to grant the requested relief. The application is liable to be dismissed."}
+                  </span>
                 </div>
               </div>
             </div>

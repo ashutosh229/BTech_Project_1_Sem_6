@@ -180,7 +180,13 @@ class RAGContextBuilder:
         if similar_cases:
             context += "## Similar Precedent Cases (Retrieved via RAG)\n"
             for i, case in enumerate(similar_cases[:5], 1):
-                context += f"{i}. {case['case_id']} (Similarity: {case['similarity']:.4f})\n"
+                # Handle either similarity or distance key depending on which searcher was used
+                score = case.get('similarity', 0.0)
+                if score == 0.0 and 'distance' in case:
+                    # Convert distance to a rough similarity score if similarity is missing
+                    score = 1.0 / (1.0 + float(case['distance']) / 500.0)
+                
+                context += f"{i}. {case['case_id']} (Similarity: {score:.4f})\n"
             context += "\n"
         
         return context

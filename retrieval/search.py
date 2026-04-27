@@ -207,18 +207,64 @@ class LegalSearcher:
         # 2. Load Corpus PHI Vectors
         phi_path = os.path.join(DATA_DIR, "processed", "corpus_intelligence_summary.csv")
         if os.path.exists(phi_path):
-            import pandas as pd
-            df = pd.read_csv(phi_path)
-            # Map case_id -> phi_dict
-            features = list(self.weights.keys()) if self.weights else []
-            if not features:
-                # Fallback if no weights found yet
-                features = [c for c in df.columns if c not in ["case_id", "true_outcome", "case_type"]]
-            
-            for _, row in df.iterrows():
-                cid = str(row["case_id"])
-                # Store only the features we weights for efficiency
-                self.corpus_phi[cid] = row[features].to_dict()
+            try:
+                import pandas as pd
+                df = pd.read_csv(phi_path)
+                if df.empty:
+                    return
+                # Map case_id -> phi_dict
+                features = list(self.weights.keys()) if self.weights else []
+                if not features:
+                    # Fallback if no weights found yet
+                    features = [c for c in df.columns if c not in ["case_id", "true_outcome", "case_type"]]
+
+                for _, row in df.iterrows():
+                    cid = str(row["case_id"])
+                    self.corpus_phi[cid] = row[features].to_dict()
+            except Exception:
+                pass  # CSV not ready yet (first run) — skip reranking
+
+    def _load_or_build_outcomes(self, cache_path):
+        """
+        Load case outcomes from cache, or build by scanning all raw JSON files.
+        Cache is versioned — if version mismatch, rebuilds automatically.
+        """
+        # Try loading from cache first
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if isinstance(data, dict) and data.get("_version") == OUTCOME_CACHE_VERSION:
+                    outcomes = {k: v for k, v in data.items() if not k.startswith("_")}
+                    print(f"📋 Loaded {len(outcomes)} cached case outcomes.")
+                    return outcomes
+            except Exception:
+                pass  # Fall through to rebuild
+
+        # Build from scratch by scanning data directory
+        print("🔍 Building case outcome cache from raw JSON files (one-time)...")
+        outcomes = {}
+        json_files = list(Path(DATA_DIR).rglob("*.json"))
+        for path in json_files:
+            # Skip processed/index subdirs
+            if any(part in path.parts for part in ("processed", "index", "dataset", "results")):
+                continue
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                outcomes[path.stem] = extract_case_outcome(data)
+            except Exception:
+                continue
+
+        # Save cache with version marker
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        cache_data = {"_version": OUTCOME_CACHE_VERSION}
+        cache_data.update(outcomes)
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(cache_data, f)
+
+        print(f"✅ Built and cached outcomes for {len(outcomes)} cases → {cache_path}")
+        return outcomes
 
     def _calculate_legal_alignment(self, query_phi, target_phi):
         """
@@ -244,7 +290,23 @@ class LegalSearcher:
             
         return score / total_weight if total_weight > 0 else 0.5
 
+    def _encode_query(self, text: str) -> "np.ndarray":
+        """Encode a single query string into a FAISS-compatible (1, dim) float32 vector."""
+        with torch.no_grad():
+            inputs = self.tokenizer(
+                text,
+                padding=True,
+                truncation=True,
+                max_length=512,
+                return_tensors="pt",
+            )
+            outputs = self.model(**inputs)
+            mask = inputs["attention_mask"].unsqueeze(-1)
+            pooled = (outputs.last_hidden_state * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+        return pooled.cpu().numpy().astype("float32")
+
     def retrieve_similar_cases(self, con_dict, k=5, strategy="balanced"):
+
         if not self.index:
             return []
 
