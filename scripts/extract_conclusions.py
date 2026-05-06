@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 
 class ConclusionExtractor:
     """
-    Extracts conclusion sections from case judgment JSON files
+    Extracts conclusion and reasoning sections from case judgment JSON files
     and consolidates them into a single conclusions database.
     """
 
@@ -28,7 +28,7 @@ class ConclusionExtractor:
 
     def clean_text(self, text: str) -> str:
         """
-        Clean extracted conclusion text by removing artifacts,
+        Clean extracted section text (conclusion or reasoning) by removing artifacts,
         normalizing whitespace, and removing metadata.
 
         Args:
@@ -62,8 +62,8 @@ class ConclusionExtractor:
         text = re.sub(r'New Delhi\s+Date:\s*\d+\.\d+\.\d+', '', text)
         text = re.sub(r'CHANDRESH', '', text)
         
-        # Remove section headers that leaked into conclusions
-        text = re.sub(r'Court\'s Reasoning|Precedent Analysis', '', text)
+        # Remove section headers that may have leaked into the text
+        text = re.sub(r'Court\'s Reasoning|Precedent Analysis|Conclusion', '', text)
         
         # Normalize whitespace: multiple spaces to single space
         text = re.sub(r' +', ' ', text)
@@ -115,75 +115,49 @@ class ConclusionExtractor:
                 "page_title": case_data.get("page_title", ""),
                 "conclusion": None,
                 "conclusion_paragraphs": [],
+                "reasoning": None,
+                "reasoning_paragraphs": [],
             }
 
-            # Extract conclusion section from elements_by_title
-            if "elements_by_title" in case_data:
-                elements = case_data["elements_by_title"]
+            def extract_id_number(item):
+                item_id = item.get("id", "p_0")
+                try:
+                    numeric_part = int(item_id.split("_")[-1])
+                    return numeric_part
+                except (ValueError, IndexError):
+                    return 0
 
-                if "Conclusion" in elements:
-                    conclusion_items = elements["Conclusion"]
+            def extract_section(title):
+                paragraphs = []
+                # Try from elements_by_title
+                if "elements_by_title" in case_data and title in case_data["elements_by_title"]:
+                    paragraphs = case_data["elements_by_title"][title]
+                # If not found, check all_paragraphs
+                elif "all_paragraphs" in case_data:
+                    paragraphs = [p for p in case_data["all_paragraphs"] if p.get("title") == title]
 
-                    # Sort conclusion items by their ID numerically
-                    # Extract numeric part from ID (e.g., "p_99" -> 99)
-                    def extract_id_number(item):
-                        item_id = item.get("id", "p_0")
-                        try:
-                            # Handle IDs like "p_99", "blockquote_106", etc.
-                            numeric_part = int(item_id.split("_")[-1])
-                            return numeric_part
-                        except (ValueError, IndexError):
-                            return 0
+                if not paragraphs:
+                    return None, []
 
-                    sorted_items = sorted(conclusion_items, key=extract_id_number)
-                    case_info["conclusion_paragraphs"] = sorted_items
+                sorted_paras = sorted(paragraphs, key=extract_id_number)
+                section_text = []
+                for item in sorted_paras:
+                    if isinstance(item, dict) and "text" in item:
+                        cleaned_para = self.clean_text(item["text"])
+                        if cleaned_para:
+                            section_text.append(cleaned_para)
+                
+                merged_text = "\n\n".join(section_text) if section_text else None
+                final_text = self.clean_text(merged_text) if merged_text else None
+                return final_text, sorted_paras
 
-                    # Create a consolidated conclusion text from sorted items
-                    conclusion_text = []
-                    for item in sorted_items:
-                        if isinstance(item, dict) and "text" in item:
-                            # Clean each paragraph before adding
-                            cleaned_para = self.clean_text(item["text"])
-                            if cleaned_para:  # Only add non-empty paragraphs
-                                conclusion_text.append(cleaned_para)
+            conclusion_text, conclusion_paras = extract_section("Conclusion")
+            case_info["conclusion"] = conclusion_text
+            case_info["conclusion_paragraphs"] = conclusion_paras
 
-                    # Join and clean the final conclusion text
-                    merged_conclusion = "\n\n".join(conclusion_text) if conclusion_text else None
-                    case_info["conclusion"] = (
-                        self.clean_text(merged_conclusion) if merged_conclusion else None
-                    )
-
-            # If conclusion not found in elements_by_title, check all_paragraphs
-            if not case_info["conclusion"] and "all_paragraphs" in case_data:
-                conclusion_paras = [
-                    p
-                    for p in case_data["all_paragraphs"]
-                    if p.get("title") == "Conclusion"
-                ]
-                if conclusion_paras:
-                    # Sort conclusion paragraphs by their ID numerically
-                    def extract_id_number(item):
-                        item_id = item.get("id", "p_0")
-                        try:
-                            numeric_part = int(item_id.split("_")[-1])
-                            return numeric_part
-                        except (ValueError, IndexError):
-                            return 0
-
-                    sorted_paras = sorted(conclusion_paras, key=extract_id_number)
-                    case_info["conclusion_paragraphs"] = sorted_paras
-                    conclusion_text = []
-                    for p in sorted_paras:
-                        # Clean each paragraph before adding
-                        cleaned_para = self.clean_text(p.get("text", ""))
-                        if cleaned_para:  # Only add non-empty paragraphs
-                            conclusion_text.append(cleaned_para)
-                    
-                    # Join and clean the final conclusion text
-                    merged_conclusion = "\n\n".join(conclusion_text) if conclusion_text else None
-                    case_info["conclusion"] = (
-                        self.clean_text(merged_conclusion) if merged_conclusion else None
-                    )
+            reasoning_text, reasoning_paras = extract_section("Court's Reasoning")
+            case_info["reasoning"] = reasoning_text
+            case_info["reasoning_paragraphs"] = reasoning_paras
 
             return case_info
 
@@ -224,7 +198,8 @@ class ConclusionExtractor:
                 self.processed_files += 1
 
                 has_conclusion = "✓" if conclusion_data.get("conclusion") else "⚠️"
-                print(f"{has_conclusion}")
+                has_reasoning = "✓" if conclusion_data.get("reasoning") else "⚠️"
+                print(f"Conclusion: {has_conclusion} | Reasoning: {has_reasoning}")
 
             except Exception as e:
                 self.failed_files += 1
@@ -236,6 +211,9 @@ class ConclusionExtractor:
         print(f"  • Failed: {self.failed_files}")
         print(
             f"  • Total conclusions extracted: {len([d for d in self.conclusions_data if d.get('conclusion')])}"
+        )
+        print(
+            f"  • Total reasoning extracted: {len([d for d in self.conclusions_data if d.get('reasoning')])}"
         )
 
     def save_conclusions(self, output_filename: str = "conclusions_data.json") -> str:
@@ -257,6 +235,9 @@ class ConclusionExtractor:
                 "total_cases": len(self.conclusions_data),
                 "cases_with_conclusions": len(
                     [d for d in self.conclusions_data if d.get("conclusion")]
+                ),
+                "cases_with_reasoning": len(
+                    [d for d in self.conclusions_data if d.get("reasoning")]
                 ),
                 "source_directory": self.input_dir,
                 "processing_stats": {
@@ -301,6 +282,9 @@ class ConclusionExtractor:
                 "cases_with_conclusions": len(
                     [d for d in self.conclusions_data if d.get("conclusion")]
                 ),
+                "cases_with_reasoning": len(
+                    [d for d in self.conclusions_data if d.get("reasoning")]
+                ),
             },
             "case_summaries": [
                 {
@@ -309,12 +293,21 @@ class ConclusionExtractor:
                     "url": case.get("url"),
                     "court_name": case.get("court_name"),
                     "has_conclusion": bool(case.get("conclusion")),
+                    "has_reasoning": bool(case.get("reasoning")),
                     "conclusion_length": (
                         len(case.get("conclusion", "")) if case.get("conclusion") else 0
+                    ),
+                    "reasoning_length": (
+                        len(case.get("reasoning", "")) if case.get("reasoning") else 0
                     ),
                     "conclusion_preview": (
                         (case.get("conclusion", "")[:200] + "...")
                         if case.get("conclusion")
+                        else None
+                    ),
+                    "reasoning_preview": (
+                        (case.get("reasoning", "")[:200] + "...")
+                        if case.get("reasoning")
                         else None
                     ),
                 }
@@ -339,12 +332,18 @@ class ConclusionExtractor:
         conclusions_with_text = [
             d for d in self.conclusions_data if d.get("conclusion")
         ]
+        reasoning_with_text = [
+            d for d in self.conclusions_data if d.get("reasoning")
+        ]
 
         stats = {
             "total_cases": len(self.conclusions_data),
             "cases_with_conclusions": len(conclusions_with_text),
             "cases_without_conclusions": len(self.conclusions_data)
             - len(conclusions_with_text),
+            "cases_with_reasoning": len(reasoning_with_text),
+            "cases_without_reasoning": len(self.conclusions_data)
+            - len(reasoning_with_text),
             "avg_conclusion_length": sum(
                 len(d.get("conclusion", "")) for d in conclusions_with_text
             )
@@ -357,6 +356,21 @@ class ConclusionExtractor:
                     len(d.get("conclusion", ""))
                     for d in conclusions_with_text
                     if d.get("conclusion")
+                ),
+                default=0,
+            ),
+            "avg_reasoning_length": sum(
+                len(d.get("reasoning", "")) for d in reasoning_with_text
+            )
+            / max(len(reasoning_with_text), 1),
+            "max_reasoning_length": max(
+                (len(d.get("reasoning", "")) for d in reasoning_with_text), default=0
+            ),
+            "min_reasoning_length": min(
+                (
+                    len(d.get("reasoning", ""))
+                    for d in reasoning_with_text
+                    if d.get("reasoning")
                 ),
                 default=0,
             ),
@@ -374,10 +388,18 @@ class ConclusionExtractor:
         print(f"Total cases processed: {stats['total_cases']}")
         print(f"Cases with conclusions: {stats['cases_with_conclusions']}")
         print(f"Cases without conclusions: {stats['cases_without_conclusions']}")
+        print(f"Cases with reasoning: {stats['cases_with_reasoning']}")
+        print(f"Cases without reasoning: {stats['cases_without_reasoning']}")
+        
         print(f"\nConclusion Length Statistics:")
         print(f"  • Average length: {stats['avg_conclusion_length']:.0f} characters")
         print(f"  • Maximum length: {stats['max_conclusion_length']} characters")
         print(f"  • Minimum length: {stats['min_conclusion_length']} characters")
+        
+        print(f"\nReasoning Length Statistics:")
+        print(f"  • Average length: {stats['avg_reasoning_length']:.0f} characters")
+        print(f"  • Maximum length: {stats['max_reasoning_length']} characters")
+        print(f"  • Minimum length: {stats['min_reasoning_length']} characters")
         print("=" * 70 + "\n")
 
 
@@ -385,7 +407,7 @@ def main():
     """Main execution function."""
 
     # Configuration
-    INPUT_DIRECTORY = "data/results_ashutosh"  # Directory containing case JSON files
+    INPUT_DIRECTORY = "data/"  # Directory containing case JSON files
     OUTPUT_DIRECTORY = "data"  # Directory to save conclusions
 
     # Create extractor instance

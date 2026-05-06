@@ -8,8 +8,8 @@ from typing import Dict, Any
 
 class ConclusionCleaner:
     """
-    Cleans extracted conclusion text by removing artifacts, metadata,
-    and normalizing whitespace.
+    Cleans extracted conclusion and court's reasoning text by removing artifacts,
+    metadata, and normalizing whitespace.
     """
 
     def __init__(self, input_file: str, output_file: str = None):
@@ -99,54 +99,62 @@ class ConclusionCleaner:
         with open(self.input_file, "r", encoding="utf-8") as f:
             self.cleaned_data = json.load(f)
 
-        print(f"✓ Loaded {len(self.cleaned_data.get('conclusions', []))} cases")
+        print(f"✓ Loaded {len(self.cleaned_data.get('cases', []))} cases")
 
-    def clean_all_conclusions(self) -> None:
-        """Clean all conclusions in the loaded data."""
+    def clean_all_sections(self) -> None:
+        """Clean all conclusions and court's reasoning in the loaded data."""
         if not self.cleaned_data:
             print("⚠️  No data loaded. Run load_conclusions() first.")
             return
 
-        conclusions_list = self.cleaned_data.get("conclusions", [])
-        self.stats["total_cases"] = len(conclusions_list)
+        cases_list = self.cleaned_data.get("cases", [])
+        self.stats["total_cases"] = len(cases_list)
 
-        print(f"\n🧹 Cleaning {len(conclusions_list)} conclusions...")
+        print(f"\n🧹 Cleaning {len(cases_list)} cases...")
         print("=" * 70)
 
-        for idx, case in enumerate(conclusions_list, 1):
+        for idx, case in enumerate(cases_list, 1):
+            cleaned_any = False
+            
+            # Clean conclusion
             if case.get("conclusion"):
-                original_conclusion = case["conclusion"]
-                cleaned_conclusion = self.clean_text(original_conclusion)
-
-                # Update the conclusion with cleaned version
-                case["conclusion"] = cleaned_conclusion
-                self.stats["cleaned_cases"] += 1
-
-                # Also clean conclusion paragraphs if they exist
+                case["conclusion"] = self.clean_text(case["conclusion"])
                 if "conclusion_paragraphs" in case:
                     for para in case["conclusion_paragraphs"]:
                         if "text" in para:
                             para["text"] = self.clean_text(para["text"])
+                cleaned_any = True
 
+            # Clean court's reasoning
+            if case.get("courts_reasoning"):
+                case["courts_reasoning"] = self.clean_text(case["courts_reasoning"])
+                if "courts_reasoning_paragraphs" in case:
+                    for para in case["courts_reasoning_paragraphs"]:
+                        if "text" in para:
+                            para["text"] = self.clean_text(para["text"])
+                cleaned_any = True
+
+            if cleaned_any:
+                self.stats["cleaned_cases"] += 1
                 status = "✓"
             else:
-                status = "⚠️ (no conclusion)"
+                status = "⚠️ (no data to clean)"
 
             print(
-                f"[{idx}/{len(conclusions_list)}] {case.get('case_id', 'Unknown')}: {status}"
+                f"[{idx}/{len(cases_list)}] {case.get('case_id', 'Unknown')}: {status}"
             )
 
         print("=" * 70)
 
-    def save_cleaned_conclusions(self) -> str:
+    def save_cleaned_data(self) -> str:
         """
-        Save cleaned conclusions to output JSON file.
+        Save cleaned data to output JSON file.
 
         Returns:
             Path to saved file
         """
         if not self.cleaned_data:
-            print("⚠️  No data to save. Run clean_all_conclusions() first.")
+            print("⚠️  No data to save. Run clean_all_sections() first.")
             return None
 
         # Update metadata
@@ -182,8 +190,8 @@ class ConclusionCleaner:
             Path to cleaned output file
         """
         self.load_conclusions()
-        self.clean_all_conclusions()
-        output_path = self.save_cleaned_conclusions()
+        self.clean_all_sections()
+        output_path = self.save_cleaned_data()
         self.print_statistics()
         return output_path
 

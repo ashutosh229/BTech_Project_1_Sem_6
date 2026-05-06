@@ -422,7 +422,7 @@ export default function AnalyzePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {result.similarCases.map((c, i) => (
+                    {(result.similarCases && result.similarCases.length > 0) ? result.similarCases.map((c, i) => (
                       <tr key={i} className="precedent-row" style={{ background: "rgba(15,23,42,0.3)", verticalAlign: "top" }}>
                         <td style={{ padding: "16px", borderRadius: "10px 0 0 10px", maxWidth: 500, borderBottom: "1px solid var(--border-ghost)" }}>
                           <div className="font-mono" style={{ color: "var(--accent-cyan)", fontWeight: 700, fontSize: 12, marginBottom: 8 }}>{c.id} ({c.year})</div>
@@ -442,7 +442,9 @@ export default function AnalyzePage() {
                           <span className={`badge ${c.outcome === "Allowed" ? "badge-green" : "badge-red"}`} style={{ fontSize: 11, padding: "4px 10px" }}>{c.outcome}</span>
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr><td colSpan={3} style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>No precedents retrieved. Ensure the backend API is running on port 8000.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
