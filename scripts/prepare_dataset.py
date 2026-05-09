@@ -1,8 +1,12 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pandas as pd
 
 from con.feature_builder import LegalFeatureBuilder, outcome_to_binary
+
 
 
 SUMMARY_PATH = "data/processed/corpus_intelligence_summary.csv"

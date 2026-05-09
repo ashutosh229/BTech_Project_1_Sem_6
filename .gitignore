@@ -214,4 +214,7 @@ batch_log*.txt
 system_analysis_*.json
 full_analysis_*.json
 digest.txt
-todo.md
+todo.md    
+venv
+
+

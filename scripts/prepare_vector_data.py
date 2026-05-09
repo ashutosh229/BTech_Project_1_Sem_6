@@ -36,7 +36,8 @@ def generate_embeddings(texts, tokenizer, model):
     model.to(device)
     all_embeddings = []
     
-    for i in range(0, len(texts), BATCH_SIZE):
+    total_batches = (len(texts) + BATCH_SIZE - 1) // BATCH_SIZE
+    for i in tqdm(range(0, len(texts), BATCH_SIZE), total=total_batches, desc="🧠 Generating embeddings", unit="batch"):
         batch_texts = texts[i:i + BATCH_SIZE]
         encoded_input = tokenizer(batch_texts, padding=True, truncation=True, max_length=512, return_tensors='pt').to(device)
         

@@ -34,12 +34,14 @@ class FullSystemOrchestrator:
         print("🚀 [1/3] Preparing Intelligence Engines...")
         self.searcher = LegalSearcher()
         self.feature_builder = LegalFeatureBuilder()
+        self._error_count = 0
         print("✅ Models Warm.")
 
     def run_all(self, limit=None):
         """Processes all 9,703 cases."""
-        files = [f for f in os.listdir(self.raw_dir) if f.endswith(".json")]
-        files.sort()
+        from pathlib import Path
+        files = sorted([str(p.relative_to(self.raw_dir)) for p in Path(self.raw_dir).rglob("*.json")])
+        files = [f for f in files if not f.startswith("processed") and not f.startswith("index") and not f.startswith("dataset")]
         if limit is not None:
             files = files[:limit]
         
@@ -68,7 +70,7 @@ class FullSystemOrchestrator:
                     "evidence_present": len(con["evidence_present"]),
                     "missing_evidence": len(missing),
                     "contradiction_score": contradictions["contradiction_score"],
-                    "judgment_probability": float(judgment["confidence"].replace("%", "")) / 100.0,
+                    "judgment_probability": float(judgment["confidence"]),  # already 0.0-1.0
                     "predicted_outcome": judgment["prediction"],
                 }
                 record.update(phi_dict)
@@ -80,7 +82,12 @@ class FullSystemOrchestrator:
                     pd.DataFrame(batch_results).to_csv(self.summary_path, index=False)
                     # print(f"📍 Checkpoint: Saved {len(batch_results)} results to summary.")
                 
-            except Exception:
+            except Exception as e:
+                if len(batch_results) == 0 and self._error_count < 3:
+                    import traceback
+                    print(f"\n❌ Error on {filename}: {e}")
+                    traceback.print_exc()
+                    self._error_count += 1
                 continue
 
         # 3. Final Save

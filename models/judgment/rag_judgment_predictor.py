@@ -117,7 +117,7 @@ class RAGJudgmentPredictor:
             query = query_text or extract_case_query_text(con_dict)
             
             # Retrieve similar cases
-            results = self.searcher.search(query, top_k=self.k_neighbors)
+            results = self.searcher.retrieve_similar_cases(con_dict, k=self.k_neighbors)
             
             # Enrich results with outcome labels
             enriched_results = []

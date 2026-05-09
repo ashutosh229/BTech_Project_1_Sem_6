@@ -8,15 +8,31 @@ import joblib
 sys.path.append(os.getcwd())
 
 from pipelines.pipeline1_old_cases.parse_case_json import parse_real_case_json
-from con.builder import build_con
-from con.feature_builder import LegalFeatureBuilder
+from con_files.builder import build_con
+from con_files.feature_builder import LegalFeatureBuilder
 
 # Reasoning imports for Step 5, 6 & 7
 from retrieval.search import retrieve_similar_cases
 from models.missing_evidence.recommendation import find_missing_evidence
 from models.contradiction.detect import detect_contradictions
-
 from models.judgment.predict import DiscriminativeReasoningEngine
+
+# Global predictor for LLM (singleton to avoid reloading embeddings)
+_LLM_PREDICTOR = None
+
+def get_llm_predictor():
+    global _LLM_PREDICTOR
+    if _LLM_PREDICTOR is None:
+        from models.judgment.nyarag_groq_implementation import NyayaRAGPredictor, RAGContextBuilder, llm
+        
+        # Determine paths relative to project root
+        base_dir = os.getcwd()
+        emb_path = os.path.join(base_dir, "outputs", "shareable_legal_vectors.json")
+        ana_path = os.path.join(base_dir, "outputs", "system_final_allahabad_2015_3099880.json")
+        
+        rag_builder = RAGContextBuilder(embeddings_path=emb_path, analysis_path=ana_path)
+        _LLM_PREDICTOR = NyayaRAGPredictor(llm, rag_builder)
+    return _LLM_PREDICTOR
 
 def run_pipeline(file_path):
     """
@@ -41,14 +57,39 @@ def run_pipeline(file_path):
     # 3b. Missing Evidence (with Φ-vector for Level 3 counterfactual)
     missing = find_missing_evidence(con, similar, phi_dict=phi_dict)
 
-    # 5. Final Inference Synthesis
+    # 5. Final Inference Synthesis (XGBoost + Symbolic)
     engine = DiscriminativeReasoningEngine()
     ai_judgment = engine.run_inference(con, similar, missing, contradictions)
 
-    # 6. Explanation Synthesis (Level 3 Research Task)
-    from models.judgment.explanation import JudgmentExplainer
-    explainer = JudgmentExplainer()
-    explanation = explainer.generate({"judgment_probability": ai_judgment})
+    # 6. Explanation Synthesis (Groq LLM-induced Reasoning)
+    try:
+        predictor = get_llm_predictor()
+        
+        # Extract meaningful facts for the LLM
+        facts_text = con.get("facts", "")
+        if not facts_text and con.get("claims"):
+            facts_text = " ".join([c.get("text", "") for c in con.get("claims")])
+        if not facts_text:
+            facts_text = "Detailed facts not extracted into CON, refer to similar cases for context."
+
+        llm_res = predictor.predict(
+            case_facts=facts_text,
+            similar_cases=similar,
+            case_id=con.get("case_id", "unknown")
+        )
+        
+        explanation = {
+            "summary_narrative": llm_res.get("explanation", "Reasoning generation failed."),
+            "logical_steps": [llm_res.get("explanation", "")],
+            "fidelity_score": llm_res.get("confidence", 0.0),
+            "prediction": llm_res.get("prediction", "UNKNOWN")
+        }
+    except Exception as e:
+        print(f"⚠️ LLM Explanation failed: {e}")
+        # Fallback to template if Groq fails
+        from models.judgment.explanation import JudgmentExplainer
+        explainer = JudgmentExplainer()
+        explanation = explainer.generate({"judgment_probability": ai_judgment})
 
     return {
         "con": con,

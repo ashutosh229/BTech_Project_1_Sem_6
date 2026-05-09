@@ -64,18 +64,85 @@ async def init_predictors():
 async def health_check():
     return {"status": "healthy", "engines": ["faiss", "groq", "xgboost"]}
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+def extract_statutes_from_text(text: str) -> List[Dict]:
+    import re
+    matches = re.findall(r'\b(\d+[A-Z]?)\s*(?:of\s*)?(IPC|BNS)\b', text, re.IGNORECASE)
+    
+    statutes = []
+    seen = set()
+    for sec, code in matches:
+        code = code.upper()
+        sec = sec.upper()
+        
+        match_letter = re.match(r'^(\d+)([A-Z])$', sec)
+        if match_letter:
+            file_sec = f"{match_letter.group(1)} {match_letter.group(2)}"
+        else:
+            file_sec = sec
+            
+        key = f"{file_sec}_{code}"
+        if key in seen:
+            continue
+        seen.add(key)
+        
+        dir_name = "ipc_sections" if code == "IPC" else "bns_sections"
+        path = os.path.join(BASE_DIR, "data", dir_name, f"{file_sec}_{code}.json")
+        
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    
+                    impact = "High" if "Non-Bailable" in str(data.get("bail", "")) else "Medium"
+                    if "death" in str(data.get("punishment", "")).lower() or "life" in str(data.get("punishment", "")).lower():
+                        impact = "Critical"
+                        
+                    statutes.append({
+                        "section": f"Sec {sec} {code}",
+                        "title": data.get("title", "Statutory Provision"),
+                        "desc": data.get("description", "")[:150] + ("..." if len(data.get("description", "")) > 150 else ""),
+                        "impact": impact
+                    })
+            except Exception as e:
+                print(f"Error loading {path}: {e}")
+                pass
+                
+    if not statutes:
+        statutes = [
+            {"section": "Stamp Act Sec 47-A", "title": "Undervalued Instruments", "desc": "Procedure for dealing with undervalued instruments.", "impact": "Direct"},
+            {"section": "Stamp Act Sec 27", "title": "Duty Considerations", "desc": "Facts affecting duty must be set forth.", "impact": "Substantive"}
+        ]
+        
+    return statutes
+
 @app.post("/analyze")
 async def analyze_case(req: CaseAnalysisRequest):
     if not ensemble_predictor or not llm_predictor:
         raise HTTPException(status_code=503, detail="Engines not initialized")
     
     try:
+        # Dynamically extract statutes from facts
+        dynamic_statutes = extract_statutes_from_text(req.facts + " " + req.case_type)
+        
+        # Map UI evidence to coarse ML names
+        UI_TO_COARSE_MAP = {
+            "medical": "Medical/FSL Reports",
+            "witness": "Witness Testimony (PW)",
+            "fir": "FIR/Seizure/PM Reports",
+            "contracts": "Agreements & Contracts",
+            "deeds": "Property Deeds",
+            "procedural": "Other Procedural Docs"
+        }
+        ml_evidence = [UI_TO_COARSE_MAP[e] for e in req.evidence if e in UI_TO_COARSE_MAP]
+
         # 1. Convert request to internal CON format
         con_dict = {
             "case_id": "current_live_analysis",
             "case_type": req.case_type,
             "facts": req.facts,
-            "evidence_present": req.evidence,
+            "evidence_present": ml_evidence,
             "reliefs": [req.reliefs] if req.reliefs else []
         }
 
@@ -88,8 +155,14 @@ async def analyze_case(req: CaseAnalysisRequest):
         re = ensemble_predictor.predict(con_dict, similar_cases=retrieved)
         
         # 4. Run LLM Synthetic Reasoning (NyayaRAG)
-        # We pass the retrieved precedents from our vector search
-        llm_res = llm_predictor.predict(req.facts, retrieved)
+        # We pass the retrieved precedents and the dynamically extracted statutes
+        statute_strings = [f"{s['section']}: {s['title']} - {s['desc']}" for s in dynamic_statutes]
+        llm_res = llm_predictor.predict(
+            case_facts=req.facts, 
+            similar_cases=retrieved, 
+            statutes=statute_strings,
+            case_id="live_analysis"
+        )
 
         # 5. Synthesize Factor Impacts
         factors = []
@@ -145,6 +218,36 @@ async def analyze_case(req: CaseAnalysisRequest):
         # Confidence is the magnitude of the assertion
         confidence_pct = round(max(final_score, 1.0 - final_score) * 100)
 
+        # --- ML COUNTERFACTUAL LIFT (How to Improve Odds) ---
+        missingEvidence = []
+        for ui_key, ml_name in UI_TO_COARSE_MAP.items():
+            if ml_name not in ml_evidence:
+                cf_con = con_dict.copy()
+                cf_con["evidence_present"] = ml_evidence + [ml_name]
+                cf_re = ensemble_predictor.predict(cf_con, similar_cases=retrieved, return_breakdown=False)
+                lift = cf_re["score"] - final_score
+                
+                # Lower threshold so we always show *some* sensitivity, even if minor
+                if lift > 0.001:
+                    missingEvidence.append({
+                        "type": ml_name,
+                        "importance": int(min(99, max(5, lift * 5000))), # Scale up importance for visual bar
+                        "lift": f"+{round(lift * 100, 1)}%",
+                        "reason": f"ML projects a {round(lift * 100, 1)}% success probability increase if this is provided."
+                    })
+        
+        missingEvidence.sort(key=lambda x: float(x["lift"].strip("+%")), reverse=True)
+        
+        advice = []
+        if "delay" in req.facts.lower() or "late" in req.facts.lower():
+            advice.append("Address the delay: Submit a 'Delay Condonation Affidavit' explaining the time gap to prevent limitation-based dismissal.")
+        for ev in missingEvidence[:2]:
+            advice.append(f"Crucial evidence gap: Provide {ev['type']} to strengthen your claim. This is projected to give a {ev['lift']} confidence lift according to our ML model.")
+        if len(req.evidence) < 2:
+            advice.append(f"Your evidence base ({len(req.evidence)} documents) is thin. Cases with 3+ evidence types have significantly higher success rates.")
+        elif len(advice) == 0:
+            advice.append("Your evidence profile aligns well with successful cases. Ensure all documents are properly authenticated and exhibited.")
+
         return {
             "prediction": pred_label,
             "confidence": confidence_pct,
@@ -161,30 +264,22 @@ async def analyze_case(req: CaseAnalysisRequest):
                 "score": final_score,
                 "detected": 2
             },
-            "relevantStatutes": [
-                {"name": "Stamp Act Sec 47-A", "relevance": "Direct", "note": "Procedure for dealing with undervalued instruments."},
-                {"name": "Stamp Act Sec 27", "relevance": "Substantive", "note": "Facts affecting duty must be set forth."}
-            ],
-            "primaryPivot": "Verification of Market Value",
+            "relevantStatutes": dynamic_statutes,
+            "primaryPivot": {
+                "feature": missingEvidence[0]["type"] if missingEvidence else "None",
+                "lift": missingEvidence[0]["lift"] if missingEvidence else "0%"
+            },
             "counterfactuals": [
-                {"scenario": "If contemporaneous sale deeds are produced", "impact": "+22% Confidence", "newOutcome": "Allowed"},
-                {"scenario": "If circle rate was updated in the same month", "impact": "-15% Confidence", "newOutcome": "Weak"}
+                {"scenario": "If missing evidence is produced", "impact": missingEvidence[0]["lift"] if missingEvidence else "+0%", "newOutcome": "Allowed"},
             ],
-            "advice": [
-                "Strengthen documentation regarding market value on the date of execution.",
-                "Provide contemporaneous sale deeds of adjacent commercial properties if applicable.",
-                "Challenge the Collector's reliance on 'future potential' using State of U.P. vs. Ambrish Tandon."
-            ],
+            "advice": advice,
             "contradictions": {
-                "count": 1,
-                "score": 0.15,
-                "details": ["Discrepancy between declared sale consideration and circle rate valuation."]
+                "count": 1 if "delay" in req.facts.lower() else 0,
+                "score": 0.15 if "delay" in req.facts.lower() else 0.0,
+                "details": ["Significant time gap mentioned in facts."] if "delay" in req.facts.lower() else []
             },
             "evidenceDensity": (len(req.evidence) / len(EVIDENCE_OPTIONS)) if EVIDENCE_OPTIONS else 0.4,
-            "missingEvidence": [
-                {"type": "Contemporaneous Sale Deeds", "importance": 85, "lift": "+15.2%", "reason": "Proves actual market value at execution."},
-                {"type": "Usage Certificate", "importance": 70, "lift": "+9.5%", "reason": "Confirms land was not used for commercial purposes."}
-            ]
+            "missingEvidence": missingEvidence
         }
 
     except Exception as e:

@@ -81,7 +81,7 @@ def encode_texts(texts, batch_size=16):
 
 
 def build_index():
-    json_files = sorted(Path(DATA_DIR).glob("*.json"))
+    json_files = sorted(Path(DATA_DIR).rglob("*.json"))
     case_ids = []
     texts = []
 

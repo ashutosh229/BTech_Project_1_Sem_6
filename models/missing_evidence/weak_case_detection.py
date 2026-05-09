@@ -9,6 +9,7 @@ import pandas as pd
 from scipy import sparse
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from tqdm import tqdm
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -55,9 +56,8 @@ SUCCESS_MARKERS = [
 
 def _collect_case_texts(data_dir):
     rows = []
-    for json_path in Path(data_dir).glob("*.json"):
-        if json_path.name.startswith("_"):
-            continue
+    all_paths = [p for p in Path(data_dir).glob("*.json") if not p.name.startswith("_")]
+    for json_path in tqdm(all_paths, desc="📂 Loading cases", unit="file"):
         try:
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -108,12 +108,16 @@ def _build_text_features(texts):
         max_features=12000,
         sublinear_tf=True,
     )
+    print("🔤 Fitting word-level TF-IDF...")
     x_word = word_vectorizer.fit_transform(texts)
+    print("🔡 Fitting character-level TF-IDF...")
     x_char = char_vectorizer.fit_transform(texts)
+    print("🔗 Combining feature matrices...")
     return word_vectorizer, char_vectorizer, sparse.hstack([x_word, x_char], format="csr")
 
 
 def _fit_weak_ensemble(x, y_seed):
+    print("🤖 Training base logistic regression model...")
     word_char_model = LogisticRegression(max_iter=3000, class_weight="balanced", C=2.0)
     word_char_model.fit(x, y_seed)
     base_prob = word_char_model.predict_proba(x)[:, 1]
@@ -122,7 +126,9 @@ def _fit_weak_ensemble(x, y_seed):
     confident = (base_prob >= 0.85) | (base_prob <= 0.15)
     pseudo_y = (base_prob >= 0.5).astype(int)
     if confident.sum() < 2 or len(set(pseudo_y[confident])) < 2:
+        print("⚠️  Not enough confident samples for refinement — skipping refined model.")
         return word_char_model, word_char_model, base_prob, base_prob
+    print(f"🔁 Refining on {confident.sum()} high-confidence samples...")
     refined_model = LogisticRegression(max_iter=3000, class_weight="balanced", C=1.0)
     refined_model.fit(x[confident], pseudo_y[confident])
     refined_prob = refined_model.predict_proba(x)[:, 1]
@@ -137,6 +143,7 @@ def build_probabilistic_weak_case_index(
     weak_scores_csv_path=WEAK_SCORES_CSV_PATH,
     weak_model_path=WEAK_MODEL_PATH,
 ):
+    print("\n🚀 Starting weak case detection pipeline...")
     df = _collect_case_texts(data_dir)
     if df.empty:
         print("⚠️ No cases found for weak-case scoring.")
@@ -146,7 +153,9 @@ def build_probabilistic_weak_case_index(
     df["seed_label"] = ((df["weak_seed"] == 1) & (df["success_seed"] == 0)).astype(int)
     df["anti_seed"] = ((df["success_seed"] == 1) & (df["weak_seed"] == 0)).astype(int)
 
+    print(f"\n📊 Building TF-IDF features for {len(df)} cases...")
     word_vectorizer, char_vectorizer, x = _build_text_features(df["text"])
+    print("\n🧠 Training ensemble classifier...")
     base_model, refined_model, base_prob, refined_prob = _fit_weak_ensemble(x, df["seed_label"].to_numpy())
 
     seed_boost = df["weak_seed"] * 0.18 - df["success_seed"] * 0.12
@@ -161,9 +170,10 @@ def build_probabilistic_weak_case_index(
 
     os.makedirs(PROCESSED_DIR, exist_ok=True)
 
+    print("\n📝 Building output payload...")
     weak_list = []
     scores_payload = {}
-    for _, row in df.iterrows():
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="📝 Writing scores", unit="case"):
         payload = {
             "case_id": row["case_id"],
             "court": row["court"],
